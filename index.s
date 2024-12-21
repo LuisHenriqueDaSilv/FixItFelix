@@ -1,26 +1,24 @@
 .data
-	char_pos: .half 0, 0
+	char_pos: .half 160, 180
 	old_char_pos: .half, 0,0
-	.include "assets/felix/idle/felixidle.s"
+	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/felixTile.s"
 
 .text 
-SETUP:
-	li a1, 0
-	li a2, 0
-	li a3, 0
-
-# a0, endereco da imagem
-# a1 = x
-# a2 = y
-# a3 = frame
-
 # t0 endereco do bitmap
 # t1 endereco da imagem
 # t2 contador de linha
 # t3 contador de coluna
 # t4 largura
 # t5 altura
+
+
+#SETUP:
+	#li a1, 0
+	#li a2, 0
+	#li a3, 0
+
+
 
 GAME_LOOP:
 	call KEY2
@@ -33,6 +31,7 @@ GAME_LOOP:
 	lh a2, 2(t0)
 	mv a3, s0
 	call PRINT
+	
 	li t0, 0xFF200604
 	sw s0, 0(t0)
 	
@@ -57,16 +56,14 @@ KEY2:
 	
 	li t0,'a'
 	beq t2, t0, CHAR_MOVE_LEFT
-	li t0,'s'
-	beq t2, t0, CHAR_MOVE_DOWN
 	li t0,'d'
 	beq t2, t0, CHAR_MOVE_RIGHT
-	li t0,'w'
-	beq t2, t0, CHAR_MOVE_UP
+	
 	
 FIM: ret
 
 CHAR_MOVE_LEFT: 
+
 	la t0, char_pos
 	la t1, old_char_pos
 	lw t2, 0(t0)
@@ -74,40 +71,50 @@ CHAR_MOVE_LEFT:
 	
 	
 	lh t1, 0(t0)
+	addi t4, t1, -4
+	bgez t4, CHAR_MOVE_L
+	#addi t1, t1, -4
+	#sh t1, 0(t0)
+	ret
+CHAR_MOVE_L:
 	addi t1, t1, -4
 	sh t1, 0(t0)
 	ret
 	
 CHAR_MOVE_RIGHT: 
+	
 	la t0, char_pos
 	la t1, old_char_pos
 	lw t2, 0(t0)
 	sw t2, 0(t1)
+	
 	lh t1, 0(t0)
+	addi t4, t1, 4 # Proxima cordenada x
+	addi t5,zero, 304
+	ble t4, t5, CHAR_MOVE_R
+	# Se proxima x for menor que width-largura do personagem
+	
+	# X for menor que width-largura da imagem
+	# x = t4
+	ret
+CHAR_MOVE_R:
 	addi t1, t1, 4
 	sh t1, 0(t0)
-	ret
-CHAR_MOVE_DOWN: 
-	la t0, char_pos
-	la t1, old_char_pos
-	lw t2, 0(t0)
-	sw t2, 0(t1)
-	lh t1, 2(t0)
-	addi t1, t1, 4
-	sh t1, 2(t0)
-	ret
-CHAR_MOVE_UP: 
-	la t0, char_pos
-	la t1, old_char_pos
-	lw t2, 0(t0)
-	sw t2, 0(t1)
-	lh t1, 2(t0)
-	addi t1, t1, -4
-	sh t1, 2(t0)
-	ret
-	
+	ret				
 
 PRINT: 
+#	a0 = endereço imagem			
+#	a1 = x					
+#	a2 = y					
+#	a3 = frame (0 ou 1)	
+		
+#	t0 = endereco do bitmap display		
+#	t1 = endereco da imagem			
+#	t2 = contador de linha			
+# 	t3 = contador de coluna			
+#	t4 = largura				
+#	t5 = altura
+
 	li t0, 0xFF0
 	add t0, t0, a3
 	slli t0, t0, 20
