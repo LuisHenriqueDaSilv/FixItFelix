@@ -3,6 +3,7 @@
 	old_char_pos: .half, 0,0
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/felixTile.s"
+	.include "assets/background.data"
 
 .text 
 # t0 endereco do bitmap
@@ -21,8 +22,15 @@
 
 
 GAME_LOOP:
+	
 	call KEY2
 	xori s0, s0, 1
+	
+	la a0, background
+	li a1, 0
+	li a2, 0
+	mv a3, s0
+	call PRINT
 	
 	la t0, char_pos
 	
