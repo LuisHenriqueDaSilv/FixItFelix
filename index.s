@@ -1,25 +1,12 @@
 .data
-	char_pos: .half 160, 180
+	char_pos: .half 160, 205
 	old_char_pos: .half, 0,0
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/felixTile.s"
 	.include "assets/background.data"
+	.include "assets/colisionmap.data"
 
 .text 
-# t0 endereco do bitmap
-# t1 endereco da imagem
-# t2 contador de linha
-# t3 contador de coluna
-# t4 largura
-# t5 altura
-
-
-#SETUP:
-	#li a1, 0
-	#li a2, 0
-	#li a3, 0
-
-
 
 GAME_LOOP:
 	
@@ -70,6 +57,24 @@ KEY2:
 	
 FIM: ret
 
+# Antes de andar:
+	# Se ele chegou no final do mapa
+		# Esquerda: 
+			# Se x for maior que 0
+		#Direta 
+			# se total-x for maior que 0
+
+	# Se ele bateu em uma parede
+		#Direita:
+			# Se x+step for diferente de 255 em colision map
+		#Esquerda:
+			# Se x-step for diferente de 255 em colision map
+
+TEST_IF_COLLIDE_WITH_LEFT_SCREEN_LIMIT:
+	addi t2, t1, -4 # t4 = charX-4
+	bgtz t2, CHAR_MOVE_L # if(t4 > 0){CHAR_MOVE_L}
+	ret
+
 CHAR_MOVE_LEFT: 
 
 	la t0, char_pos
@@ -77,16 +82,32 @@ CHAR_MOVE_LEFT:
 	lw t2, 0(t0)
 	sw t2, 0(t1)
 	
+	lh t1, 0(t0)              # t1 = charX (posicao X atual do jogador)
+	lh t2, 2(t0)              # t2 = charY (posicao Y atual do jogador)
+
+    la t3, colisionmap        # t3 aponta para o inicio do mapa de colisao
+    li t4, 320                # t4 = largura do mapa de colisao (em pixels)
+    mul t5, t2, t4            # t5 = deslocamento da linha (y * largura)
+    add t5, t5, t1            # t5 = indice do pixel atual no mapa de colisao
+	addi t5, t5, 7
 	
-	lh t1, 0(t0)
-	addi t4, t1, -4
-	bgez t4, CHAR_MOVE_L
-	#addi t1, t1, -4
-	#sh t1, 0(t0)
+    addi t5, t5, -2            # t5 = indice do pixel a esquerda no mapa
+
+	add t3, t3, t5            # t3 = endereco do pixel a esquerda
+	lbu t6, 0(t3)              # t6 = valor do pixel a esquerda no mapa de colisao
+
+	bne t6, t4, TEST_IF_COLLIDE_WITH_LEFT_SCREEN_LIMIT
 	ret
+
 CHAR_MOVE_L:
 	addi t1, t1, -4
 	sh t1, 0(t0)
+	ret
+
+
+TEST_IF_COLLIDE_WITH_RIGHT_SCREEN_LIMIT:
+	addi t5,zero, 300
+	ble t1, t5, CHAR_MOVE_R
 	ret
 	
 CHAR_MOVE_RIGHT: 
@@ -95,23 +116,31 @@ CHAR_MOVE_RIGHT:
 	la t1, old_char_pos
 	lw t2, 0(t0)
 	sw t2, 0(t1)
+
+	lh t1, 0(t0)              # t1 = charX (posicao X atual do jogador)
+	lh t2, 2(t0)              # t2 = charY (posicao Y atual do jogador)
+
+    la t3, colisionmap        # t3 aponta para o inicio do mapa de colisao
+    li t4, 320                # t4 = largura do mapa de colisao (em pixels)
+    mul t5, t2, t4            # t5 = deslocamento da linha (y * largura)
+    add t5, t5, t1            # t5 = indice do pixel atual no mapa de colisao
+	addi t5, t5, 7
 	
-	lh t1, 0(t0)
-	addi t4, t1, 4 # Proxima cordenada x
-	addi t5,zero, 304
-	ble t4, t5, CHAR_MOVE_R
-	# Se proxima x for menor que width-largura do personagem
-	
-	# X for menor que width-largura da imagem
-	# x = t4
+    addi t5, t5, 18            # t5 = indice do pixel a esquerda no mapa
+
+	add t3, t3, t5            # t3 = endereco do pixel a esquerda
+	lbu t6, 0(t3)              # t6 = valor do pixel a esquerda no mapa de colisao
+	bne t6, t4 TEST_IF_COLLIDE_WITH_RIGHT_SCREEN_LIMIT
 	ret
+
+
 CHAR_MOVE_R:
 	addi t1, t1, 4
 	sh t1, 0(t0)
 	ret				
 
 PRINT: 
-#	a0 = endereço imagem			
+#	a0 = endere?o imagem			
 #	a1 = x					
 #	a2 = y					
 #	a3 = frame (0 ou 1)	
