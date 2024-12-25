@@ -1,5 +1,5 @@
 .data
-	char_pos: .half 160, 205
+	char_pos: .half 160, 0
 	old_char_pos: .half, 0,0
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/felixTile.s"
@@ -10,6 +10,7 @@
 
 GAME_LOOP:
 	
+	call GRAVITY
 	call KEY2
 	xori s0, s0, 1
 	
@@ -29,7 +30,6 @@ GAME_LOOP:
 	
 	li t0, 0xFF200604
 	sw s0, 0(t0)
-	
 	
 	la t0, old_char_pos
 	la a0, felixtile
@@ -73,6 +73,32 @@ FIM: ret
 TEST_IF_COLLIDE_WITH_LEFT_SCREEN_LIMIT:
 	addi t2, t1, -4 # t4 = charX-4
 	bgtz t2, CHAR_MOVE_L # if(t4 > 0){CHAR_MOVE_L}
+	ret
+
+FALL:
+	la t0, char_pos
+	lh t1, 2(t0) # charY
+	addi t1, t1, 2
+	sh t1, 2(t0)
+	ret
+
+GRAVITY:
+	# endAbaixo = charX + width*(charY+charHeight)
+	la t0, char_pos
+	lh t1, 0(t0) # charX
+	lh t2, 2(t0) # charY
+	la t0, colisionmap
+	la t4, felixidle
+	lw t5, 4(t4) # charHeight
+	add t3, t2, t5  # t3 = charY + charHeight
+	li t2, 320
+	mul t0, t2, t3 # t0 = width*(charY+charHeight)
+	add t0, t0, t1 # t0 = t0 + charX
+	la t1, colisionmap
+	add t0, t0, t1 # t0 = Endere?o charX + width*(charY+charHeight) na colision map
+	lbu t1, 0(t0) #Valor do pixel em t0
+
+	bnez t1, FALL
 	ret
 
 CHAR_MOVE_LEFT: 
