@@ -1,5 +1,5 @@
 .data
-	char_pos: .half 160, 0
+	char_pos: .half 160, 0, 0 # x y l(lado: 1=esquerda ou 0=direita)
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/background.data"
 	.include "assets/colisionmap.data"
@@ -12,12 +12,12 @@ GAME_LOOP:
 		# 1 segundo -> 30fps
 		# 1000ms -> 30fps
 		# 1000/30 ~= 33 entre cada frame
-		li a0, 33 
-		call SLEEP # A função sleep faz o sistema dormir pela quantidade de ms salvo no a0
+	li a0, 33 
+	call SLEEP # A função sleep faz o sistema dormir pela quantidade de ms salvo no a0
 
 	# Funções de comportamentos gerais do jogo:
-		call GRAVITY # Faz o player cair caso ele nao esteja no chão
-		call KEY2 # Reconhece as teclas pressionadas
+	call GRAVITY # Faz o player cair caso ele nao esteja no chão
+	call KEY2 # Reconhece as teclas pressionadas
 		
 	# A cada execucao da gameloop o sistema vai:
 	# Desenhar um dos frames
@@ -34,6 +34,7 @@ GAME_LOOP:
 	li a1, 0 # x do background
 	li a2, 0 # y do background
 	mv a3, s0 # a3 = frame atual(0 ou 1)
+	li a4, 0
 	call PRINT
 	
 	# Desenhar o personagem
@@ -41,6 +42,7 @@ GAME_LOOP:
 	la a0, felixidle # a = Endereço do label da imagem do personagem 
 	lh a1, 0(t0) # a1 = x do personagem (Primeira half word)
 	lh a2, 2(t0) # a2 = y do personagem (Segunda half word)
+	lh a4, 4(t0) # a2 = y do personagem (Segunda half word)
 	mv a3, s0 # a3 = frame atual(0 ou 1)
 	call PRINT
 
@@ -123,6 +125,8 @@ CHAR_MOVE_LEFT:
 	CHAR_MOVE_L:
 		addi t1, t1, -4 # t1 = x do personagem - 4 pixels (Anda 4 pixels para esquerda)
 		sh t1, 0(t0) # Salva o novo x do personagem
+		li t2, 1
+		sh t2, 4(t0) 
 		ret
 	
 CHAR_MOVE_RIGHT: 
@@ -156,6 +160,8 @@ CHAR_MOVE_RIGHT:
 	CHAR_MOVE_R:
 		addi t1, t1, 4 # t1 = x do personagem + 4 (Anda 4 pixels para direita)
 		sh t1, 0(t0)
+		li t2, 0
+		sh t2, 4(t0) 
 		ret				
 
 
@@ -166,6 +172,7 @@ PRINT:
 	#	a1 = x da imagem	
 	#	a2 = y da imagem
 	#	a3 = frame atual (0 ou 1)	
+	# 	a4 = inverter eixo y
 
 	li t0, 0xFF0
 	add t0, t0, a3 # t0 = t0 + frameAtual(0 ou 1)
@@ -189,7 +196,10 @@ PRINT:
 	lw t4, 0(a0) # t4 = largura da imagem (Primeira word do arquivo da imagem)
 	lw t5, 4(a0) # t5 = altura da imagem (Primeira word do arquivo da imagem)
 
-	# Como nao tem um ret aqui, o label PRINT_LINE eh executado sem ser chamado
+	beqz a4, PRINT_LINE
+	bnez a4, PRINT_INVERTED_LINE
+	ret
+
 	PRINT_LINE: 
 		lw t6, 0(t1) # Le uma word da imagem (4 bytes de uma vez)
 		sw t6, 0(t0) # Escreve a word lida no bitmap
@@ -203,7 +213,6 @@ PRINT:
 		blt t3, t4, PRINT_LINE  
 
 		# Quando o contador maior que a largura, devemos passar para a proxima linha
-		
 		addi t0, t0, 320 # Soma a largura da tela no endereco do bitmap (Joga exatamente uma linha pra baixo)
 		# A soma anterior resulta em onde vai ser o final da linha de baixo, para voltar para o comeco
 		# subtraimos a largura da imagem do resultado
@@ -213,6 +222,30 @@ PRINT:
 		addi t2, t2, 1	# Soma 1 no contador de linhas
 		bgt t5, t2, PRINT_LINE # Se o contador de linhas for menor que a altura da imagem, tem mais linhas pra desenhar, entao volta la para o inicio  
 		
+		ret 
+
+	PRINT_INVERTED_LINE:
+		add t1, t1, t4 # Joga o endereco da imagem pro final da linha
+		INVERTED_PRINT_LOOP:
+			# t1-> Final do arquivo e ir subtraindo
+			lb t6, 0(t1)
+			sb t6, 0(t0)
+
+			addi t0, t0, 1 # Anda 1 bytes no endereco do bitmap (O byte que ja foi desenhados) 
+			addi t1, t1, -1 # Volta 1 bytes no endereco da imagem (Ela ta sendo lida ao contrario)
+			addi t3, t3, 1 # Adiciona 1 bytes no contador de colunas desenhadas
+
+			blt t3, t4, INVERTED_PRINT_LOOP
+
+			addi t0, t0, 320 # Soma a largura da tela no endereco do bitmap (Joga exatamente uma linha pra baixo)
+			# A soma anterior resulta em onde vai ser o final da linha de baixo, para voltar para o comeco
+			# subtraimos a largura da imagem do resultado
+			sub t0, t0, t4
+			add t1, t1, t4 # Volta pra onde comecou (Fim da linha) (Na proxima execucao ele vai pra proxima linha)
+			
+			mv t3, zero # Zera o contador de colunas
+			addi t2, t2, 1	# Soma 1 no contador de linhas
+			bgt t5, t2, PRINT_INVERTED_LINE # Se o contador de linhas for menor que a altura da imagem, tem mais linhas pra desenhar, entao volta la para o inicio
 		ret 
 
 

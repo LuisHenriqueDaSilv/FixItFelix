@@ -1,53 +1,50 @@
+# Código RISC-V para desenhar uma imagem no bitmap do RARS
+
     .data
-msg_no_button: .asciiz "Nenhum botao pressionado\n"
-msg_button:     .asciiz "Botao pressionado: "
-newline:        .asciiz "\n"
+# Define as cores RGB (0xRRGGBB)
+    red: .word 0xFF0000  # Vermelho
+    green: .word 0x00FF00  # Verde
+    blue: .word 0x0000FF  # Azul
+    black: .word 0x000000  # Preto
 
     .text
     .globl main
 
 main:
-main_loop:
-    # Ler o estado dos botï¿½es no endereï¿½o MMIO (0x10008000)
-    li t0, 0xFF200000       # Endereï¿½o do MMIO (substitua pelo correto)
-    lw t1, 0(t0)            # Carrega o estado dos botï¿½es em t1
-
-    # Verificar se algum botï¿½o estï¿½ pressionado
-    beqz t1, no_button      # Se t1 == 0, nenhum botï¿½o pressionado
-
-    # Determinar qual botï¿½o estï¿½ pressionado
-    mv t2, t1               # Copiar o valor lido para t2
-    li t3, 0                # ï¿½ndice inicial do botï¿½o (t3)
-
-find_button:
-    andi t4, t2, 1          # Extrair o bit menos significativo (estado do botï¿½o atual)
-    bnez t4, button_found   # Se t4 != 0, botï¿½o pressionado encontrado
-    srli t2, t2, 1          # Deslocar t2 para a direita (prï¿½ximo bit)
-    addi t3, t3, 1          # Incrementar o ï¿½ndice do botï¿½o
-    bnez t2, find_button    # Continuar enquanto t2 != 0
-
-button_found:
-    # Exibir mensagem "Botï¿½o pressionado: "
-    la a0, msg_button       # Carregar mensagem base
-    li a7, 4                # syscall para print_string
+    # Ativa o bitmap
+    li a7, 0x10           # Syscall para ativar o bitmap
+    li a0, 1              # 1 para ativar
     ecall
 
-    # Exibir o ï¿½ndice do botï¿½o pressionado
-    mv a0, t3               # Colocar ï¿½ndice do botï¿½o em a0
-    li a7, 1                # syscall para print_int
+    # Configuração do quadrado
+    li t0, 50             # X inicial
+    li t1, 50             # Y inicial
+    li t2, 100            # Tamanho do quadrado
+
+    # Cor do quadrado
+    la t3, red            # Endereço da cor vermelha
+    lw t4, 0(t3)          # Carrega o valor da cor vermelha em t4
+
+    # Desenha o quadrado
+draw_square:
+    mv t5, t0             # Inicializa x
+row_loop:
+    mv t6, t1             # Inicializa y
+column_loop:
+    li a7, 0x11           # Syscall para desenhar pixel
+    mv a0, t5             # X
+    mv a1, t6             # Y
+    mv a2, t4             # Cor
     ecall
 
-    # Nova linha
-    la a0, newline          # Carregar nova linha
-    li a7, 4                # syscall para print_string
-    ecall
+    addi t6, t6, 1        # Próximo pixel na coluna
+    add t1, t1, t2
+    blt t6, t1, column_loop # Continua até o fim da coluna
 
-    j main_loop             # Voltar ao loop principal
+    addi t5, t5, 1        # Próximo pixel na linha
+    add t0, t0, t2
+    blt t5, t0, row_loop    # Continua até o fim da linha
 
-no_button:
-    # Exibir mensagem de nenhum botï¿½o pressionado
-    la a0, msg_no_button    # Carregar mensagem "Nenhum botï¿½o pressionado"
-    li a7, 4                # syscall para print_string
-    ecall
-
-    j main_loop             # Voltar ao loop principal
+    # Loop infinito para manter o bitmap visível
+infinite_loop:
+    j infinite_loop
