@@ -1,8 +1,6 @@
 .data
 	char_pos: .half 160, 0
-	old_char_pos: .half, 0,0
 	.include "assets/felix/idle/felixidle.data"
-	.include "assets/felix/felixTile.s"
 	.include "assets/background.data"
 	.include "assets/colisionmap.data"
 
@@ -44,16 +42,6 @@ GAME_LOOP:
 	lh a1, 0(t0) # a1 = x do personagem (Primeira half word)
 	lh a2, 2(t0) # a2 = y do personagem (Segunda half word)
 	mv a3, s0 # a3 = frame atual(0 ou 1)
-	call PRINT
-
-
-	la t0, old_char_pos
-	la a0, felixtile
-	lh a1, 0(t0) 
-	lh a2, 2(t0)
-	
-	mv a3, s0
-	xori a3, a3, 1
 	call PRINT
 
 	# Trocar o frame que tá sendo mostrado agora:
@@ -109,9 +97,6 @@ GRAVITY:
 
 CHAR_MOVE_LEFT: 
 	la t0, char_pos # t0 = endereco do label onde tá salvo o x e y do personagem
-	la t1, old_char_pos # t1 = endereco do label onde tá salvo o x e y do personagem antes de modificar
-	lw t2, 0(t0) # t2 = x e y do personagem
-	sw t2, 0(t1) # salva o x e y nos x e y antigos 
 	
 	lh t1, 0(t0)	# t1 = x do personagem
 	lh t2, 2(t0)	# t2 = y do personagem
@@ -143,9 +128,6 @@ CHAR_MOVE_LEFT:
 CHAR_MOVE_RIGHT: 
 	
 	la t0, char_pos # t0 = endereco do label onde tá salvo o x e y do personagem
-	la t1, old_char_pos # t1 = endereco do label onde tá salvo o x e y do personagem antes de modificar
-	lw t2, 0(t0) # t2 = x e y do personagem
-	sw t2, 0(t1) # salva o x e y nos x e y antigos 
 	
 	lh t1, 0(t0)	# t1 = x do personagem
 	lh t2, 2(t0)	# t2 = y do personagem
