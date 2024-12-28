@@ -1,5 +1,8 @@
 .data
-	char_pos: .half 160, 0, 0 # x y l(lado: 1=esquerda ou 0=direita)
+				   #(l: 1=esquerda ou 0=direita)
+				   # 0   2  4       6
+				   # x   y  l, aceleracaoY
+	char_pos: .half 160, 0, 0, 		0 
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/background.data"
 	.include "assets/colisionmap.data"
@@ -12,7 +15,7 @@ GAME_LOOP:
 		# 1 segundo -> 30fps
 		# 1000ms -> 30fps
 		# 1000/30 ~= 33 entre cada frame
-	li a0, 33 
+	li a0, 33
 	call SLEEP # A função sleep faz o sistema dormir pela quantidade de ms salvo no a0
 
 	# Funções de comportamentos gerais do jogo:
@@ -63,12 +66,20 @@ KEY2:
 	
 	li t0,'a' 
 	beq t2, t0, CHAR_MOVE_LEFT # Se a tecla pressionada for 'a' o personagem move pra esquerda 
+	li t0,'A' 
+	beq t2, t0, CHAR_MOVE_LEFT # Se a tecla pressionada for 'a' o personagem move pra esquerda 
 	li t0,'d'
 	beq t2, t0, CHAR_MOVE_RIGHT # Se a tecla pressionada for 'd' o personagem move pra direita
+	li t0,'D'
+	beq t2, t0, CHAR_MOVE_RIGHT # Se a tecla pressionada for 'd' o personagem move pra direita
+	li t0, ' '
+	beq t2, t0, CHAR_JUMP
 	ret # Volta pra onde a funcao foi chamada
+
 	
 	
 FIM: ret
+
 
 GRAVITY:
 	la t0, char_pos
@@ -87,15 +98,43 @@ GRAVITY:
 
 	# Lugares onde tem colisao, no mapa de colisao eh igual a zero
 	# Se t1 for diferente de zero, nao tem colisao e o personagem cai  
-	bnez t1, FALL # bnez = Branch if not equal zero
-	ret
+	beqz t1, END_FALL
+
+
+	# IF yAcel = 0 e pixel for 0 (End fall)
+	# Caso qualquer das condicoes acima nao for verdade, fall
 
 	FALL:
-		la t0, char_pos 
-		lh t1, 2(t0) # y do personagem
-		addi t1, t1, 2 # ydopersonagem = ydopersonagem +2 (Vai 2 pixels pra baixo)
-		sh t1, 2(t0) # Salva o novo y do personagem
+		la t0, char_pos
+		lh t1, 6(t0)
+		li t3, 10
+		blt t1, t3, INCREMENT
+		j SKIP_INCREMENT
+		
+		INCREMENT:
+			addi t1, t1, 1
+			sh t1, 6(t0)
+
+		SKIP_INCREMENT:
+			lh t2, 6(t0)
+			lh t1, 2(t0) # y do personagem
+			lh t2, 6(t0) # aceleracao y
+			add t1, t1, t2 # ydopersonagem = ydopersonagem +aceleracaoY (Vai 2 pixels pra baixo)
+			sh t1, 2(t0) # Salva o novo y do personagem
+			ret
+			
+
+	END_FALL:
+		
+		la t0, char_pos
+		lh t2, 6(t0)
+		bgez t2, INNER_FALL
+		j FALL
 		ret
+		INNER_FALL:
+			li t1, 0
+			sh t1, 6(t0)
+			ret
 
 CHAR_MOVE_LEFT: 
 	la t0, char_pos # t0 = endereco do label onde tá salvo o x e y do personagem
@@ -164,6 +203,11 @@ CHAR_MOVE_RIGHT:
 		sh t2, 4(t0) 
 		ret				
 
+CHAR_JUMP:
+	la t0, char_pos
+	li t1, -10
+	sh t1, 6(t0)
+	ret
 
 
 PRINT: 
