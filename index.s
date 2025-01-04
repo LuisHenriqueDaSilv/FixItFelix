@@ -1,10 +1,10 @@
 .data
    			   #(l: 1=esquerda ou 0=direita)
 				   # 0   2  4       6
-				   # x   y  l, aceleracaoY
-	char_pos: .half 85, 194, 0, 		0
+				   # x   y   l, aceleracaoY
+	char_pos: .half 85, 194, 1, 		0
                
-    mov_animation: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, y inicial
+    mov_animation: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, caindo
 
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/idle/felixjumple.data"
@@ -13,9 +13,9 @@
     # Defini��o das janelas (posi��o x, y)
     windows: 
         #     x    y
-        .half 85 , 194    # janela 1
+        .half 85 , 194   # janela 1
         .half 117, 194   # janela 2
-        .half 160, 203   # porta
+        .half 155, 202   # porta
         .half 185, 194   # janela 4
         .half 216, 194   # janela 5
 
@@ -31,13 +31,11 @@
         .half 185, 74    # janela 14
         .half 216, 74    # janela 15
 
-
-
 .text
 GAME_LOOP:
-    # Configura��o do FPS do jogo (30 fps)
+    # Configuracao do FPS do jogo (30 fps)
     li a0, 33
-    call SLEEP  # A fun��o sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
+    call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
     call KEY2  # Reconhece as teclas pressionadas
 
     la t0, mov_animation
@@ -75,7 +73,7 @@ GAME_LOOP:
     LOAD_THEN:
     lh a1, 0(t0)       # a1 = x do personagem
     lh a2, 2(t0)       # a2 = y do personagem
-    lh a4, 4(t0)       # a4 = dire��o do personagem
+    lh a4, 4(t0)       # a4 = direcao do personagem
     mv a3, s0          # a3 = frame atual (0 ou 1)
     call PRINT
 
@@ -131,6 +129,12 @@ MOVE_ANIMATION:
     li t2, 1
     beq t2, t1, SUB_Y
 
+    lh t2, 8(t0)
+    li t1, 1
+    beq t2, t1, FALL
+    li t1, 2
+    beq t2, t1, UP
+
     ADD_Y:
         lh t4, 2(t3) # t4 = y do personagem
         lh t5, 6(t0) # t5 = y alvo
@@ -150,7 +154,8 @@ MOVE_ANIMATION:
         THEN_CALC:
 
         # addi t6, t5, -0
-        li t5, 16
+        li t5, 16 # metade do caminho horizontal de uma janela pra outra
+        
         ble t6, t5, REACHED_TOP
 
         addi t4, t4, -2
@@ -174,10 +179,21 @@ MOVE_ANIMATION:
     THEN_Y:
     lh t4, 0(t3) # t4 = x do personagem
     lh t5, 4(t0) # x alvo
-    bge t4, t5, END_ANIMATION
-    addi t4, t4, 4
+    lh t1, 4(t3) # Direção do personagem
+    li t2, 1
+    bne t1, t2, RIGHT_ANIMATION
+
+    #LEFT_ANIMATION:
+    ble t4, t5, END_ANIMATION
+    addi t4, t4, -4
     sh t4, 0(t3)
     j THEN
+
+    RIGHT_ANIMATION:
+        bge t4, t5, END_ANIMATION
+        addi t4, t4, 4
+        sh t4, 0(t3)
+        j THEN
     
     END_ANIMATION:
         li t1, 0
@@ -190,8 +206,24 @@ MOVE_ANIMATION:
         sh t5, 2(t3)
 
     THEN:
-
     ret
+
+    FALL:
+        lh t4, 2(t3) # t4 = y do personagem
+        lh t5, 6(t0) # t5 = y alvo
+        beq t4, t5, THEN_Y # Chegou no y alvo
+        
+        addi t4, t4, 4
+        sh t4, 2(t3)
+        ret
+    UP:
+        lh t4, 2(t3) # t4 = y do personagem
+        lh t5, 6(t0) # t5 = y alvo
+        beq t4, t5, THEN_Y # Chegou no y alvo
+        
+        addi t4, t4, -4
+        sh t4, 2(t3)
+        ret
 
 CHAR_MOVE_LEFT:
     la t0, char_pos    # t0 = endere�o do personagem (x, y)
@@ -213,8 +245,23 @@ CHAR_MOVE_LEFT:
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
-    sh t4, 0(t0)
-    sh t5, 2(t0)
+    li t3,1
+    sh t3, 4(t0)
+
+    la t0, mov_animation
+    li t1, 1
+    sh t1, 0(t0) # Esta em animacao
+    li t1, 0
+    sh t1, 2(t0) # chegou no pico y
+    sh t4, 4(t0) # x alvo
+    sh t5, 6(t0) # y alvo
+    la t1, char_pos
+    lh t1, 2(t1) # y do personagem
+    li t1, 0
+    sh t1, 8(t0) # caindo
+
+    # sh t4, 0(t0)
+    # sh t5, 2(t0)
 
     ret
 
@@ -238,6 +285,9 @@ CHAR_MOVE_RIGHT:
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
+    li t3,0
+    sh t3, 4(t0)
+
     # Inicia a animacao:
     la t0, mov_animation
     li t1, 1
@@ -246,6 +296,10 @@ CHAR_MOVE_RIGHT:
     sh t1, 2(t0) # chegou no pico y
     sh t4, 4(t0) # x alvo
     sh t5, 6(t0) # y alvo
+    la t1, char_pos
+    lh t1, 2(t1) # y do personagem
+    li t1, 0
+    sh t1, 8(t0) # caindo
 
     ret
 
@@ -269,8 +323,19 @@ CHAR_MOVE_UP:
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
-    sh t4, 0(t0)
-    sh t5, 2(t0)
+    # Inicia a animacao:
+    la t0, mov_animation
+    li t1, 1
+    sh t1, 0(t0) # Esta em animacao
+    li t1, 0
+    sh t1, 2(t0) # chegou no pico y
+    sh t4, 4(t0) # x alvo
+    sh t5, 6(t0) # y alvo
+    li t1, 2
+    sh t1, 8(t0) # caindo
+
+    # sh t4, 0(t0)
+    # sh t5, 2(t0)
 
     ret
 
@@ -296,8 +361,19 @@ CHAR_MOVE_DOWN:
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
-    sh t4, 0(t0)
-    sh t5, 2(t0)
+    # Inicia a animacao:
+    la t0, mov_animation
+    li t1, 1
+    sh t1, 0(t0) # Esta em animacao
+    li t1, 0
+    sh t1, 2(t0) # chegou no pico y
+    sh t4, 4(t0) # x alvo
+    sh t5, 6(t0) # y alvo
+    li t1, 1
+    sh t1, 8(t0) # caindo
+
+    # sh t4, 0(t0)
+    # sh t5, 2(t0)
     ret 
     
 
