@@ -3,33 +3,28 @@
 				   # 0   2  4       6
 				   # x   y   l, aceleracaoY
 	char_pos: .half 85, 194, 1, 		0
+       
+         
+                
+        barra_vidas_pos: .half 1 , 26   #posicao que barra de vida aparce
                
+        score_pos: .half  1 , 12  	#posicao em que aparcee a pontuacao
+        
+        VIDAS: .byte 3   		#numero maximo de vidas
+     
+                              
     mov_animation: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, caindo
 
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/idle/felixjumple.data"
-	.include "assets/background.data"
+	.include "assets/background2.data"
+	.include "assets/vidas/1vidas.data"			#vidas 1
+	.include "assets/vidas/2vidas.data"			#vidas 2
+	.include "assets/vidas/3vidas.data"			#vidas 3
+    .include "datas/janelas.data"
 
-    # Defini��o das janelas (posi��o x, y)
-    windows: 
-        #     x    y
-        .half 85 , 194   # janela 1
-        .half 117, 194   # janela 2
-        .half 155, 202   # porta
-        .half 185, 194   # janela 4
-        .half 216, 194   # janela 5
+    # Definiï¿½ï¿½o das janelas (posiï¿½ï¿½o x, y)
 
-        .half 85, 134    # janela 6
-        .half 117, 134   # janela 7
-        .half 160, 138   # sacada
-        .half 185, 134   # janela 9
-        .half 216, 134   # janela 10
-
-        .half 85, 74     # janela 11
-        .half 117, 74    # janela 12
-        .half 151, 74    # janela 13
-        .half 185, 74    # janela 14
-        .half 216, 74    # janela 15
 
 .text
 GAME_LOOP:
@@ -52,7 +47,7 @@ GAME_LOOP:
     xori s0, s0, 1
 
     # Desenhar o background
-    la a0, background  # Carrega o endere�o do background
+    la a0, background2  # Carrega o endereï¿½o do background
     li a1, 0           # x do background
     li a2, 0           # y do background
     mv a3, s0          # a3 = frame atual (0 ou 1)
@@ -60,7 +55,7 @@ GAME_LOOP:
     call PRINT
 
     # Desenhar o personagem
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     la t2, mov_animation
     lh t3, 0(t2)
     li t4, 1
@@ -69,18 +64,23 @@ GAME_LOOP:
         la a0, felixidle
         j LOAD_THEN
     LOAD_JUMP:
-        la a0, felixjumple   # a0 = endere�o da imagem do personagem
+        la a0, felixjumple   # a0 = endereï¿½o da imagem do personagem
     LOAD_THEN:
     lh a1, 0(t0)       # a1 = x do personagem
     lh a2, 2(t0)       # a2 = y do personagem
     lh a4, 4(t0)       # a4 = direcao do personagem
     mv a3, s0          # a3 = frame atual (0 ou 1)
-    call PRINT
+    call PRINT  
+
+    call PRINT_JANELAS
 
     # Atualiza o frame mostrado
-    li t0, 0xFF200604  # Endere�o onde o �ndice do frame � armazenado
-    sw s0, 0(t0)       # Salva o frame atual no endere�o acima
+    li t0, 0xFF200604  # Endereï¿½o onde o ï¿½ndice do frame ï¿½ armazenado
+    sw s0, 0(t0)       # Salva o frame atual no endereï¿½o acima
 
+    #desenhando as 3 vidas
+    jal a4, PRINTAR_VIDAS  
+    
     j GAME_LOOP
 
 KEY2:
@@ -94,10 +94,10 @@ KEY2:
     li t1, 0xFF200000
     lw t0, 0(t1)
     andi t0, t0, 0x0001
-    beq t0, zero, FIM  # Se a tecla n�o foi pressionada, vai para o fim
+    beq t0, zero, FIM  # Se a tecla nï¿½o foi pressionada, vai para o fim
     lw t2, 4(t1)
 
-    # Detectar teclas espec�ficas para movimenta��o
+    # Detectar teclas especï¿½ficas para movimentaï¿½ï¿½o
     li t0, 'a'
     beq t2, t0, CHAR_MOVE_LEFT
     li t0, 'A'
@@ -121,7 +121,72 @@ KEY2:
 
 FIM:
     ret
+ 
+    ##########################################   
+PRINTAR_VIDAS:
+	la a7, VIDAS #VIDAS é um .byte 3 , pq tem 3 vidas
+	lb s10, 0(a7) #colocando o valor de vidas em s10
+	la a5 barra_vidas_pos #posicao da barra de vida
+	lh s7, 0(a5) # coordenada em x
+	lh s8, 2(a5) # coordenada em y
+	
+	li s4,1  
+	li a6,2
+	li s6,3
+	
+	beq s10, s4, PRINT_VIDA1 # se s10 = 1 , mostra 1 vida
+	beq s10, a6, PRINT_VIDA2 # se s10 = 2 , mostra 2 vida
+	beq s10, s6, PRINT_VIDA3 # se s10 = 3 , mostra 3 vida
+	ret
+PRINT_VIDA3:
+	
+	la a0, vidas3 #caregando a imagem das 3 vidas
+	li a1, 1
+	li a2, 26
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    	li a4, 0
+	call PRINT
+	jalr t1, a4, 0
+	
+PRINT_VIDA2:
 
+	la a0,vidas2 #caregando a imagem das 2 vidas
+	li a1, 1
+	li a2, 26
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    	li a4, 0
+	call PRINT
+	jalr t1, a4, 0
+	
+PRINT_VIDA1:
+
+	la a0,vidas1 #caregando a imagem da 1 vidas
+	li a1, 1
+	li a2, 26
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    	li a4, 0
+	call PRINT
+	jalr t1, a4, 0
+
+	
+
+SEARCH_WINDOW:
+    # a0 x do personagem
+    # a1 y do personagem
+    # a2 endereco de retorno
+    # a3 endereco das janelas
+    # Retorno:
+        #a0: endereco da janela
+    addi a3, a3, 8
+    lh t4, 0(a3) # X da janela atual
+    lh t5, 2(a3) # Y da janela atual
+    bne a0, t4, SEARCH_WINDOW
+    bne a1, t5, SEARCH_WINDOW
+    mv a0, a3
+    jalr t1, a2, 0
+
+
+###############################################
 MOVE_ANIMATION:
     la t0, mov_animation
     la t3, char_pos
@@ -179,7 +244,7 @@ MOVE_ANIMATION:
     THEN_Y:
     lh t4, 0(t3) # t4 = x do personagem
     lh t5, 4(t0) # x alvo
-    lh t1, 4(t3) # Direção do personagem
+    lh t1, 4(t3) # DireÃ§Ã£o do personagem
     li t2, 1
     bne t1, t2, RIGHT_ANIMATION
 
@@ -226,22 +291,21 @@ MOVE_ANIMATION:
         ret
 
 CHAR_MOVE_LEFT:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 85 # x limite da ultima janela da esquerda
     ble t1, t2, FIM
 
     la t3, windows
-    addi t3, t3, -4
-    SEARCH_WINDOW:
-        addi t3, t3, 4
-        lh t4, 0(t3) # X da janela atual
-        lh t5, 2(t3) # Y da janela atual
-        bne t1, t4, SEARCH_WINDOW
-        bne t6, t5, SEARCH_WINDOW
+    addi t3, t3, -8
+    mv a0, t1
+    mv a1, t6
+    mv a3, t3
+    jal a2, SEARCH_WINDOW
     
-    addi t3, t3, -4 # Janela destino
+    mv t3, a0
+    addi t3, t3, -8 # Janela destino
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
@@ -266,22 +330,21 @@ CHAR_MOVE_LEFT:
     ret
 
 CHAR_MOVE_RIGHT:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 216 # x limite da ultima janela da esquerda
     bge t1, t2, FIM
 
     la t3, windows
-    addi t3, t3, -4
-    SEARCH_WINDOW:
-        addi t3, t3, 4
-        lh t4, 0(t3) # X da janela atual
-        lh t5, 2(t3) # Y da janela atual
-        bne t1, t4, SEARCH_WINDOW
-        bne t6, t5, SEARCH_WINDOW
+    addi t3, t3, -8
+    mv a0, t1
+    mv a1, t6
+    mv a3, t3
+    jal a2, SEARCH_WINDOW
     
-    addi t3, t3, 4 # Janela destino
+    mv t3, a0
+    addi t3, t3, 8 # Janela destino
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
@@ -304,22 +367,21 @@ CHAR_MOVE_RIGHT:
     ret
 
 CHAR_MOVE_UP:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 74 # y limite da ultima janela da esquerda
     ble t6, t2, FIM
 
     la t3, windows
-    addi t3, t3, -4
-    SEARCH_WINDOW:
-        addi t3, t3, 4
-        lh t4, 0(t3) # X da janela atual
-        lh t5, 2(t3) # Y da janela atual
-        bne t1, t4, SEARCH_WINDOW
-        bne t6, t5, SEARCH_WINDOW
-
-    addi t3, t3, 20 # Janela destino
+    addi t3, t3, -8
+    mv a0, t1
+    mv a1, t6
+    mv a3, t3
+    jal a2, SEARCH_WINDOW
+    
+    mv t3, a0
+    addi t3, t3, 40 # Janela destino
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
@@ -340,7 +402,7 @@ CHAR_MOVE_UP:
     ret
 
 CHAR_MOVE_DOWN:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 203 # y limite da porta
@@ -349,15 +411,14 @@ CHAR_MOVE_DOWN:
     bge t6, t2, FIM
 
     la t3, windows
-    addi t3, t3, -4
-    SEARCH_WINDOW:
-        addi t3, t3, 4
-        lh t4, 0(t3) # X da janela atual
-        lh t5, 2(t3) # Y da janela atual
-        bne t1, t4, SEARCH_WINDOW
-        bne t6, t5, SEARCH_WINDOW
-
-    addi t3, t3, -20 # Janela destino
+    addi t3, t3, -8
+    mv a0, t1
+    mv a1, t6
+    mv a3, t3
+    jal a2, SEARCH_WINDOW
+    
+    mv t3, a0
+    addi t3, t3, -40 # Janela destino
     lh t4, 0(t3) # X da janela destino
     lh t5, 2(t3) # Y da janela destino
 
@@ -380,12 +441,12 @@ CHAR_MOVE_DOWN:
 PRINT:
     # Desenha a imagem
     li t0, 0xFF0
-    add t0, t0, a3      # Endere�o do frame atual (0 ou 1)
-    slli t0, t0, 20     # Move 20 bits � esquerda
+    add t0, t0, a3      # Endereï¿½o do frame atual (0 ou 1)
+    slli t0, t0, 20     # Move 20 bits ï¿½ esquerda
     li t1, 320          # Largura da tela
     mul t1, t1, a2      # Largura da linha da imagem
-    add t0, t0, t1      # Endere�o da linha de imagem
-    add t0, t0, a1      # Posi��o exata para desenhar a imagem
+    add t0, t0, t1      # Endereï¿½o da linha de imagem
+    add t0, t0, a1      # Posiï¿½ï¿½o exata para desenhar a imagem
     addi t1, a0, 8      # Pula as duas primeiras palavras (info da imagem)
 
     # Desenha linha por linha da imagem
@@ -398,16 +459,16 @@ PRINT:
     bnez a4, PRINT_INVERTED_LINE
     ret
 
-    # Fun��o para desenhar a linha da imagem
+    # Funï¿½ï¿½o para desenhar a linha da imagem
     PRINT_LINE:
-        lw t6, 0(t1)  # L� uma palavra da imagem
+        lw t6, 0(t1)  # Lï¿½ uma palavra da imagem
         sw t6, 0(t0)  # Escreve no bitmap
         addi t0, t0, 4
         addi t1, t1, 4
         addi t3, t3, 4
-        blt t3, t4, PRINT_LINE  # Se n�o chegou ao fim da linha, continua
-        addi t0, t0, 320         # Vai para a pr�xima linha
-        sub t0, t0, t4           # Ajusta para o in�cio da pr�xima linha
+        blt t3, t4, PRINT_LINE  # Se nï¿½o chegou ao fim da linha, continua
+        addi t0, t0, 320         # Vai para a prï¿½xima linha
+        sub t0, t0, t4           # Ajusta para o inï¿½cio da prï¿½xima linha
         mv t3, zero
         addi t2, t2, 1
         bgt t5, t2, PRINT_LINE
@@ -430,8 +491,13 @@ PRINT:
             bgt t5, t2, PRINT_INVERTED_LINE
         ret
 
+PRINT_JANELAS:
+    la t1, windows
+    ret
+
+
 SLEEP:
-    # Fun��o de delay
+    # Funï¿½ï¿½o de delay
     li a7, 32
     ecall
     ret
