@@ -20,6 +20,7 @@
 	.include "assets/felix/fix/fix2.data"
 	
     .include "assets/background2.data"
+    .include "assets/fase1.data"
 	.include "assets/vidas/1vidas.data"
 	.include "assets/vidas/2vidas.data"
 	.include "assets/vidas/3vidas.data"
@@ -162,7 +163,7 @@ PRINTAR_VIDAS:
 	ret
 PRINT_VIDA3:
 	
-	la a0, vidas3 #caregando a imagem das 3 vidas
+	la a0, fase1 #caregando a imagem das 3 vidas
 	li a1, 1
 	li a2, 26
 	mv a3, s0          # a3 = frame atual (0 ou 1)
@@ -182,7 +183,7 @@ PRINT_VIDA2:
 	
 PRINT_VIDA1:
 
-	la a0,vidas1 #caregando a imagem da 1 vidas
+	la a0,vidas1 #  caregando a imagem da 1 vidas
 	li a1, 1
 	li a2, 26
 	mv a3, s0          # a3 = frame atual (0 ou 1)
