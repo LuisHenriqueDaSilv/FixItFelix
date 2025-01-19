@@ -1,14 +1,42 @@
+###########################################################
+.macro MACRO_PRINT_FASES 
+
+	li a1, 304
+	li a2, 1
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    	mv s7, a4
+    	li a4,0
+	call PRINT
+	
+.end_macro
+
+###########################################################
+.macro MACRO_PRINT_VIDAS 
+
+	li a1, 1
+	li a2, 26
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    	mv s7, a4
+    	li a4,0
+	call PRINT
+	
+.end_macro
+
+#############################################################
 .data
    			   #(l: 1=esquerda ou 0=direita)
 				   # x   y   l, aceleracaoY, fixing
 	char_pos: .half 85, 194, 1, 		0,     0
-                
+         
+                fases_pos: .half 304, 1
+                       
         barra_vidas_pos: .half 1 , 26   #posicao que barra de vida aparce
                
         score_pos: .half  1 , 12  	#posicao em que aparcee a pontuacao
         
         VIDAS: .byte 3   		#numero maximo de vidas
      
+     	FASES: .byte 1 #numero da fase inicial
                               
     mov_animation: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, caindo
 
@@ -21,6 +49,7 @@
 	
     .include "assets/background2.data"
     .include "assets/fase1.data"
+    .include "assets/fase2.data"
 	.include "assets/vidas/1vidas.data"
 	.include "assets/vidas/2vidas.data"
 	.include "assets/vidas/3vidas.data"
@@ -29,7 +58,8 @@
     .include "assets/janelas/janela0.data"
     .include "assets/janelas/janela1.data"
     .include "assets/janelas/janela2.data"
-
+	
+	
 
 
 .text
@@ -89,11 +119,14 @@ GAME_LOOP:
 
 
     # Atualiza o frame mostrado
-    li t0, 0xFF200604  # Endere�o onde o �ndice do frame � armazenado
-    sw s0, 0(t0)       # Salva o frame atual no endere�o acima
+    li t0, 0xFF200604  # Endereï¿½o onde o ï¿½ndice do frame ï¿½ armazenado
+    sw s0, 0(t0)       # Salva o frame atual no endereï¿½o acima
 
     #desenhando as 3 vidas
     jal a4, PRINTAR_VIDAS  
+    
+    #desenhando o numero das fases
+    jal a4, PRINTAR_FASES
     
     j GAME_LOOP
 
@@ -113,10 +146,10 @@ KEY2:
     li t1, 0xFF200000
     lw t0, 0(t1)
     andi t0, t0, 0x0001
-    beq t0, zero, FIM  # Se a tecla n�o foi pressionada, vai para o fim
+    beq t0, zero, FIM  # Se a tecla nï¿½o foi pressionada, vai para o fim
     lw t2, 4(t1)
 
-    # Detectar teclas espec�ficas para movimenta��o
+    # Detectar teclas especï¿½ficas para movimentaï¿½ï¿½o
     li t0, 'a'
     beq t2, t0, CHAR_MOVE_LEFT
     li t0, 'A'
@@ -144,14 +177,46 @@ KEY2:
 
 FIM:
     ret
+ ##########################################
+ PRINTAR_FASES:
+ 
+ la a7, FASES #FASES eh um .byte 1 , pq comeï¿½a na fase 1
+	lb s10, 0(a7) #colocando o valor de FASES em s10
+	la a5 fases_pos #posicao do numero da fase
+	
+	li s4,1  
+	li a6,2
+	
+	
+	beq s10, s4, PRINT_FASE1 # se s10 = 1 , mostra numero 1
+	beq s10, a6, PRINT_FASE2 # se s10 = 2 , mostra numero 2
+	
+	ret
+	
+PRINT_FASE1:
+
+
+	la a0, fase2
+
+	MACRO_PRINT_FASES
+	
+	jalr t1, s7, 0
+	
+PRINT_FASE2:
+	 
+	 la a0, fase2
+
+	 MACRO_PRINT_FASES
+	
+	jalr t1, s7, 0
+
  
     ##########################################   
 PRINTAR_VIDAS:
-	la a7, VIDAS #VIDAS � um .byte 3 , pq tem 3 vidas
+	la a7, VIDAS #VIDAS ï¿½ um .byte 3 , pq tem 3 vidas
 	lb s10, 0(a7) #colocando o valor de vidas em s10
 	la a5 barra_vidas_pos #posicao da barra de vida
-	lh s7, 0(a5) # coordenada em x
-	lh s8, 2(a5) # coordenada em y
+	
 	
 	li s4,1  
 	li a6,2
@@ -163,33 +228,27 @@ PRINTAR_VIDAS:
 	ret
 PRINT_VIDA3:
 	
-	la a0, fase1 #caregando a imagem das 3 vidas
-	li a1, 1
-	li a2, 26
-	mv a3, s0          # a3 = frame atual (0 ou 1)
-    	li a4, 0
-	call PRINT
-	jalr t1, a4, 0
+	la a0, vidas3 #caregando a imagem das 3 vidas
+	
+	MACRO_PRINT_VIDAS
+	
+	jalr t1, s7, 0
 	
 PRINT_VIDA2:
 
 	la a0,vidas2 #caregando a imagem das 2 vidas
-	li a1, 1
-	li a2, 26
-	mv a3, s0          # a3 = frame atual (0 ou 1)
-    li a4, 0
-	call PRINT
-	jalr t1, a4, 0
+	
+	MACRO_PRINT_VIDAS
+	
+	jalr t1, s7, 0
 	
 PRINT_VIDA1:
 
 	la a0,vidas1 #  caregando a imagem da 1 vidas
-	li a1, 1
-	li a2, 26
-	mv a3, s0          # a3 = frame atual (0 ou 1)
-    	li a4, 0
-	call PRINT
-	jalr t1, a4, 0
+	
+	MACRO_PRINT_VIDAS
+	
+	jalr t1, s7, 0
 
 	
 
@@ -266,7 +325,7 @@ MOVE_ANIMATION:
     THEN_Y:
     lh t4, 0(t3) # t4 = x do personagem
     lh t5, 4(t0) # x alvo
-    lh t1, 4(t3) # Direção do personagem
+    lh t1, 4(t3) # DireÃ§Ã£o do personagem
     li t2, 1
     bne t1, t2, RIGHT_ANIMATION
 
@@ -313,7 +372,7 @@ MOVE_ANIMATION:
         ret
 
 CHAR_MOVE_LEFT:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 85 # x limite da ultima janela da esquerda
@@ -352,7 +411,7 @@ CHAR_MOVE_LEFT:
     ret
 
 CHAR_MOVE_RIGHT:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 216 # x limite da ultima janela da esquerda
@@ -389,7 +448,7 @@ CHAR_MOVE_RIGHT:
     ret
 
 CHAR_MOVE_UP:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 74 # y limite da ultima janela da esquerda
@@ -424,7 +483,7 @@ CHAR_MOVE_UP:
     ret
 
 CHAR_MOVE_DOWN:
-    la t0, char_pos    # t0 = endere�o do personagem (x, y)
+    la t0, char_pos    # t0 = endereï¿½o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 203 # y limite da porta
@@ -461,7 +520,7 @@ CHAR_MOVE_DOWN:
     
 
 PRINT:
-    # a0, endere�o da imagem
+    # a0, endereï¿½o da imagem
     # a1 = x
     # a2 = y
     # a3 = frame
@@ -485,16 +544,16 @@ PRINT:
     bnez a4, PRINT_INVERTED_LINE
     ret
 
-    # Fun��o para desenhar a linha da imagem
+    # Funï¿½ï¿½o para desenhar a linha da imagem
     PRINT_LINE:
-        lw t6, 0(t1)  # L� uma palavra da imagem
+        lw t6, 0(t1)  # Lï¿½ uma palavra da imagem
         sw t6, 0(t0)  # Escreve no bitmap
         addi t0, t0, 4
         addi t1, t1, 4
         addi t3, t3, 4
-        blt t3, t4, PRINT_LINE  # Se n�o chegou ao fim da linha, continua
-        addi t0, t0, 320         # Vai para a pr�xima linha
-        sub t0, t0, t4           # Ajusta para o in�cio da pr�xima linha
+        blt t3, t4, PRINT_LINE  # Se nï¿½o chegou ao fim da linha, continua
+        addi t0, t0, 320         # Vai para a prï¿½xima linha
+        sub t0, t0, t4           # Ajusta para o inï¿½cio da prï¿½xima linha
         mv t3, zero
         addi t2, t2, 1
         bgt t5, t2, PRINT_LINE
