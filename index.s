@@ -46,6 +46,8 @@
 
 	.include "assets/felix/fix/fix1.data"
 	.include "assets/felix/fix/fix2.data"
+
+	.include "assets/sounds/music.data"
 	
     .include "assets/background2.data"
     .include "assets/fase1.data"
@@ -64,6 +66,8 @@
 
 .text
 GAME_LOOP:
+    call musica
+
     # Configuracao do FPS do jogo (30 fps)
     li a0, 33
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
@@ -689,10 +693,50 @@ FIX_ANIMATION:
         #call SLEEP
 
 
-
-
 SLEEP:
     # Funcao de delay
     li a7, 32
     ecall
+    ret
+musica:
+    la s6, NOTAS_MUSICA
+    lw s1, 0(s6) #quantas notas existem
+    lw s2, 4(s6) #em que nota eu estou
+    lw s3, 8(s6) #quand a ultima nota foi tocada do 6
+
+    li t0, 12
+    mul s4, t0, s2
+    add s4, s4, s6  #endereço da nota atual do 6
+
+    li a7, 30
+    ecall
+
+    sub s8, a0, s3 # quanto tempo já se passou desde que a última nota foi tocada
+
+    lw t1, 4(s4)
+    bgtu t1, s8, MF0 
+            #se já for pra tocar a próxima nota do, 6
+        
+        ble s2, s1, MF1
+            li s2, 0
+            mv s4, s6
+        MF1:
+            addi s4, s4, 12
+
+            li a7, 31
+            lw a0, 0(s4)
+            lw a1, 4(s4)
+            li a2, 0
+            li a3, 60
+            ecall
+
+            li a7, 30
+            ecall
+
+            sw a0, 8(s6)
+
+            addi s2, s2, 1
+            sw s2, 4(s6)
+            
+    MF0:
     ret
