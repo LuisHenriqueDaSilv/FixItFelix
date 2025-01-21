@@ -726,7 +726,7 @@ musica:
             li a7, 31
             lw a0, 0(s4)
             lw a1, 4(s4)
-            li a2, 0
+            li a2, 1
             li a3, 60
             ecall
 
