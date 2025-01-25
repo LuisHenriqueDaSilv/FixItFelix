@@ -56,7 +56,7 @@
 
 .text
 GAME_LOOP:
-    call musica
+    call TOCA_MUSICA
 
     # Configuracao do FPS do jogo (30 fps)
     li a0, 27
@@ -784,43 +784,4 @@ SLEEP:
     ecall
     ret
 
-musica:
-    la s6, NOTAS_MUSICA
-    lw s1, 0(s6) #quantas notas existem
-    lw s2, 4(s6) #em que nota eu estou
-    lw s3, 8(s6) #quand a ultima nota foi tocada do 6
-
-    li t0, 12
-    mul s4, t0, s2
-    add s4, s4, s6  #endere?o da nota atual do 6
-
-    li a7, 30
-    ecall
-
-    sub s8, a0, s3 # quanto tempo ja se passou desde que a altima nota foi tocada
-
-    lw t1, 4(s4)
-    bgtu t1, s8, MF0 
-    #se ja for pra tocar a proxima nota do, 6
-    ble s2, s1, MF1
-    li s2, 0
-    mv s4, s6
-    MF1:
-        addi s4, s4, 12
-
-        li a7, 31
-        lw a0, 0(s4)
-        lw a1, 4(s4)
-        li a2, 4
-        li a3, 128
-        ecall
-
-        li a7, 30
-        ecall
-
-        sw a0, 8(s6)
-        addi s2, s2, 1
-        sw s2, 4(s6)
-            
-    MF0:
-    ret
+.include "musica.s"
