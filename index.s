@@ -2,7 +2,6 @@
 # s0=Frame atual
 # s7=Ponteiro para retorno em algumas funcoes (Para onde o programa deve voltar depois da chamada)
 
-
 ###########################################################
 .macro MACRO_PRINT_LEVEL 
 	li a1, 304
@@ -14,12 +13,11 @@
 
 ###########################################################
 .macro MACRO_PRINT_LIFES 
-	li a1, 1
+    li a1, 1
 	li a2, 26
 	mv a3, s0          # a3 = frame atual (0 ou 1)
     li a4,0
 	call PRINT
-	
 .end_macro
 
 #############################################################
@@ -47,16 +45,21 @@
 	.include "assets/vidas/2vidas.data"
 	.include "assets/vidas/3vidas.data"
     .include "datas/janelas.data"
+    .include "datas/ralph.data"
     .include "assets/janelas/janela0.data"
     .include "assets/janelas/janela1.data"
     .include "assets/janelas/janela2.data"
+
+    .include "assets/ralph/RalphIdle.data"
+    .include "assets/ralph/walk/RalphWalk1.data"
+    .include "assets/ralph/walk/RalphWalk2.data"
 
 .text
 GAME_LOOP:
     call musica
 
     # Configuracao do FPS do jogo (30 fps)
-    li a0, 33
+    li a0, 27
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
     call KEY2  # Reconhece as teclas pressionadas
 
@@ -81,6 +84,32 @@ GAME_LOOP:
     li a4, 0
     call PRINT
     jal a6, PRINT_JANELAS
+
+
+    # Movimentacao do Ralph
+    jal s7, MOVE_RALPH
+
+    la t0, ralph_animation_data
+    lh t1, 0(t0)
+    li t2, 0
+    beq t2, t1, PRINT_RALPH_IDLE
+
+    jal s7, RALPH_ANIMATION
+    j AFTER_PRINT_RALPH
+    
+    PRINT_RALPH_IDLE:
+        # Desenhar o Ralph
+        # la t1, ralph_positions_x
+        la t2, ralph_data
+        la a0, RalphIdle  # Carrega o endereco do ralph
+        lh a1, 0(t2)           # x do ralph
+        lh a2, 2(t2)          # y do ralph
+        mv a3, s0          # a3 = frame atual (0 ou 1)
+        li a4, 0
+        call PRINT
+
+    AFTER_PRINT_RALPH:
+
 
     # Desenhar o personagem
     la t0, char_data    # t0 = endereco do personagem (x, y)
@@ -136,7 +165,7 @@ KEY2:
     beq t0, zero, FIM  # Se a tecla nao foi pressionada, vai para o fim
     lw t2, 4(t1)
 
-    # Detectar teclas especï¿½ficas para movimentaï¿½ï¿½o
+    # Detectar teclas espec�ficas para movimenta��o
     li t0, 'a'
     beq t2, t0, CHAR_MOVE_LEFT
     li t0, 'A'
@@ -164,7 +193,7 @@ FIM:
     ret
  ##########################################
 PRINTAR_FASES:
-    la t0, FASES #FASES eh um .byte 1 , pq comeï¿½a na fase 1
+    la t0, FASES #FASES eh um .byte 1 , pq come�a na fase 1
 	lb t1, 0(t0) #t1 = numero da fase atual
 	li t2,1 
 	li t3,2
@@ -184,7 +213,7 @@ PRINT_FASE2:
  
     ##########################################   
 PRINTAR_VIDAS:
-	la t0, VIDAS #VIDAS ï¿½ um .byte 3 , pq tem 3 vidas
+	la t0, VIDAS #VIDAS � um .byte 3 , pq tem 3 vidas
 	lb t1, 0(t0) #colocando o valor de vidas em t1
 	
 	li t2,1  
@@ -393,7 +422,7 @@ CHAR_MOVE_RIGHT:
     ret
 
 CHAR_MOVE_UP:
-    la t0, char_data    # t0 = endereï¿½o do personagem (x, y)
+    la t0, char_data    # t0 = endere�o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 74 # y limite da ultima janela da esquerda
@@ -424,7 +453,7 @@ CHAR_MOVE_UP:
     ret
 
 CHAR_MOVE_DOWN:
-    la t0, char_data    # t0 = endereï¿½o do personagem (x, y)
+    la t0, char_data    # t0 = endere�o do personagem (x, y)
     lh t1, 0(t0)       # t1 = x do personagem
     lh t6, 2(t0)       # t6 = y do personagem
     li t2, 203 # y limite da porta
@@ -458,7 +487,7 @@ CHAR_MOVE_DOWN:
     
 
 PRINT:
-    # a0, endereï¿½o da imagem
+    # a0, endere�o da imagem
     # a1 = x
     # a2 = y
     # a3 = frame
@@ -482,16 +511,16 @@ PRINT:
     bnez a4, PRINT_INVERTED_LINE
     ret
 
-    # Funï¿½ï¿½o para desenhar a linha da imagem
+    # Fun��o para desenhar a linha da imagem
     PRINT_LINE:
-        lw t6, 0(t1)  # Lï¿½ uma palavra da imagem
+        lw t6, 0(t1)  # L� uma palavra da imagem
         sw t6, 0(t0)  # Escreve no bitmap
         addi t0, t0, 4
         addi t1, t1, 4
         addi t3, t3, 4
-        blt t3, t4, PRINT_LINE  # Se nï¿½o chegou ao fim da linha, continua
-        addi t0, t0, 320         # Vai para a prï¿½xima linha
-        sub t0, t0, t4           # Ajusta para o inï¿½cio da prï¿½xima linha
+        blt t3, t4, PRINT_LINE  # Se n�o chegou ao fim da linha, continua
+        addi t0, t0, 320         # Vai para a pr�xima linha
+        sub t0, t0, t4           # Ajusta para o in�cio da pr�xima linha
         mv t3, zero
         addi t2, t2, 1
         bgt t5, t2, PRINT_LINE
@@ -622,6 +651,102 @@ FIX_ANIMATION:
 
         jalr t0, a6, 0
 
+MOVE_RALPH:
+
+    li a7, 30
+    ecall
+
+    la t4, ralph_animation_delay
+    lw t0, 0(t4) # Ms do fim da ultima movimentacao
+    sub t1, a0, t0
+
+    li t2, 1000 # Intervalo em ms entre cada movimentacao
+    bltu t1, t2, END_RALPH_MOVE
+
+    li t0, 1
+    la t1, ralph_animation_data
+    lh t2, 0(t1)
+    beq t2, t1, END_RALPH_MOVE
+    sw a0, 0(t4) # Salva o ms do ultimo 
+
+    SORTEAR:   
+        li a0, 0
+        li a1, 4
+        li a7, 42
+        ecall
+        li t1, 2 
+        mul t0, a0, t1
+        la t1, ralph_positions_x
+        add t1, t1, t0 # t1 = endereco da janela sorteada
+        lh t2, 0(t1) # t2 = x da janela sorteada
+        la t1, ralph_data
+        lh t3, 0(t1) # x atual do personagem
+        beq t3, t2, SORTEAR # Sorteia ate achar uma janela diferente da atual
+
+    la t0, ralph_animation_data
+    li t1, 1
+    sh t1, 0(t0)
+    sh t2, 2(t0) # X do ralph
+
+    bge t2, t3, SET_DIRECTION_0
+
+    SET_DIRECTION_1: # Se nao cair no 0, seta como 1
+        li t2, 1
+        sh t2, 4(t0)
+        j AFTER_SAVE_DIRECTION
+
+    SET_DIRECTION_0:
+        li t2, 0
+        sh t2, 4(t0)
+
+    AFTER_SAVE_DIRECTION:
+
+    END_RALPH_MOVE: 
+	jalr t1, s7, 0
+
+RALPH_ANIMATION:
+    la t2, ralph_data
+    la a0, RalphWalk1  # Carrega o endereco do ralph
+    lh a1, 0(t2)           # x do ralph
+    lh a2, 2(t2)          # y do ralph
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li t0, ralph_animation_data
+    lh a4, 4(t0)  
+
+    lh t1, 2(t0) # X alvo da animacao
+    beq t1, a1, END_RALPH_ANIMATION
+
+    bge a1, t1, SUB_X
+    SUM_X:  
+        addi t0, a1, 3 # t0 = novo x
+        bge t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
+        j AFTER_CALC_NEW_X
+
+    SUB_X:
+        addi t0, a1, -3 # t0 = novo x
+        ble t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
+        j AFTER_CALC_NEW_X
+
+    AFTER_CALC_NEW_X:
+    sh t0, 0(t2)
+    call PRINT
+	jalr t1, s7, 0
+
+    END_RALPH_ANIMATION:
+        li t0, ralph_animation_data
+        li t2, 0
+        sh t2, 0(t0) # Salva animacao como 0
+
+        la t2, ralph_animation_delay
+        li a7, 30
+        ecall 
+        sw a0, 0(t2)
+
+        la t2, ralph_data
+        sh t1, 0(t2)
+	    jalr t1, s7, 0
+
+
 SLEEP:
     # Funcao de delay
     li a7, 32
@@ -636,16 +761,16 @@ musica:
 
     li t0, 12
     mul s4, t0, s2
-    add s4, s4, s6  #endereço da nota atual do 6
+    add s4, s4, s6  #endere�o da nota atual do 6
 
     li a7, 30
     ecall
 
-    sub s8, a0, s3 # quanto tempo já se passou desde que a última nota foi tocada
+    sub s8, a0, s3 # quanto tempo ja se passou desde que a altima nota foi tocada
 
     lw t1, 4(s4)
     bgtu t1, s8, MF0 
-    #se já for pra tocar a próxima nota do, 6
+    #se ja for pra tocar a proxima nota do, 6
     ble s2, s1, MF1
     li s2, 0
     mv s4, s6

@@ -1,0 +1,8 @@
+#                 x, y
+ralph_data: .half 70, 0
+ralph_positions_x: .half 70, 103, 138, 170, 205
+
+# 
+ralph_animation_delay: .word 0
+#                           andando (0 = false 1=true), x alvo, (lado que esta indo: 1=s ou 0=direita)
+ralph_animation_data: .half 0,                          0,      0 
