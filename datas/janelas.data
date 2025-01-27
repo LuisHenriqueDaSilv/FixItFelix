@@ -8,12 +8,14 @@ windows:
 
     .half 85, 134 , 1, 0   # janela 6
     .half 117, 134, 1, 0   # janela 7
-    .half 160, 138, 0, 2   # sacada
+    .half 155, 138, 0, 2   # sacada
     .half 185, 134, 1, 0   # janela 9
     .half 216, 134, 1, 0   # janela 10
 
     .half 85, 74, 1 , 0   # janela 11
     .half 117, 74, 1, 0    # janela 12
-    .half 151, 74, 1, 0    # janela 13
+    .half 155, 74, 1, 0    # janela 13
     .half 185, 74, 1, 0    # janela 14
     .half 216, 74, 1, 0    # janela 15
+
+

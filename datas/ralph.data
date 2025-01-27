@@ -4,5 +4,5 @@ ralph_positions_x: .half 70, 103, 138, 170, 205
 
 # 
 ralph_animation_delay: .word 0
-#                           andando (0 = false 1=true), x alvo, (lado que esta indo: 1=s ou 0=direita), Contador de frame, imagem atual
-ralph_animation_data: .half 0,                          0,      0,                                      0,                  0
+#                           Em animacao (0 = false 1=true), x alvo, (lado que esta indo: 1=s ou 0=direita), Contador de frame, imagem atual, Andando (Se for 0 esta atacando)
+ralph_animation_data: .half 0,                              0,      0,                                      0,                  0,                  1

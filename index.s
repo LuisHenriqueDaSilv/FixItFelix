@@ -11,6 +11,14 @@
 	call PRINT
 .end_macro
 
+.macro MACRO_PRINT_GAMEOVER
+	li a1, 40
+	li a2, 66
+	mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4,0
+	call PRINT
+.end_macro
+
 ###########################################################
 .macro MACRO_PRINT_LIFES 
     li a1, 1
@@ -31,6 +39,9 @@
     VIDAS: .byte 3   		#numero maximo de vidas
     FASES: .byte 1 #numero da fase inicial
     char_animation_data: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, caindo
+    Pontos: .half 0
+
+    .eqv tela 0xff0
 
 	.include "assets/felix/idle/felixidle.data"
 	.include "assets/felix/idle/felixjumple.data"
@@ -41,25 +52,34 @@
     .include "assets/background2.data"
     .include "assets/fase1.data"
     .include "assets/fase2.data"
+    .include "assets/tijolos.data"
 	.include "assets/vidas/1vidas.data"
 	.include "assets/vidas/2vidas.data"
 	.include "assets/vidas/3vidas.data"
-    .include "datas/janelas.data"
-    .include "datas/ralph.data"
     .include "assets/janelas/janela0.data"
     .include "assets/janelas/janela1.data"
     .include "assets/janelas/janela2.data"
-
     .include "assets/ralph/RalphIdle.data"
     .include "assets/ralph/walk/RalphWalk1.data"
     .include "assets/ralph/walk/RalphWalk2.data"
+    .include "assets/ralph/attack/RalphAttack2.data"
+    .include "assets/ralph/attack/RalphAttack1.data"
+    .include "nums.data"
+
+
+    .include "assets/vidas/0vidas.data"
+    .include "assets/gameover.data"
+
+    .include "datas/janelas.data"
+    .include "datas/ralph.data"
+    .include "datas/bricks.data"
 
 .text
 GAME_LOOP:
     call TOCA_MUSICA
 
     # Configuracao do FPS do jogo (30 fps)
-    li a0, 27
+    li a0, 24
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
     call KEY2  # Reconhece as teclas pressionadas
 
@@ -85,6 +105,7 @@ GAME_LOOP:
     call PRINT
     jal a6, PRINT_JANELAS
 
+    jal s7, PRINT_AND_MOVE_BRICKS
 
     # Movimentacao do Ralph
     jal s7, MOVE_RALPH
@@ -99,7 +120,6 @@ GAME_LOOP:
     
     PRINT_RALPH_IDLE:
         # Desenhar o Ralph
-        # la t1, ralph_positions_x
         la t2, ralph_data
         la a0, RalphIdle  # Carrega o endereco do ralph
         lh a1, 0(t2)           # x do ralph
@@ -107,9 +127,7 @@ GAME_LOOP:
         mv a3, s0          # a3 = frame atual (0 ou 1)
         li a4, 0
         call PRINT
-
     AFTER_PRINT_RALPH:
-
 
     # Desenhar o personagem
     la t0, char_data    # t0 = endereco do personagem (x, y)
@@ -143,6 +161,16 @@ GAME_LOOP:
     jal s7, PRINTAR_VIDAS  
     #desenhando o numero das fases
     jal s7, PRINTAR_FASES
+
+    jal s7, TEST_BRICK_COLISION_WITH_CHAR
+
+    #desenhando os pontos
+    la a0, Pontos
+    lh a0, 0(a0)
+    li a1, 4	
+    li a3, 18			
+    li a4, 10	
+    jal s7, PRINTAR_PONTUACAO
     
     j GAME_LOOP
 
@@ -185,13 +213,22 @@ KEY2:
     li t0, 'e'
     beq t2, t0, FIX
     li t0, 'E'
-    beq t2, t0, FIX
+    beq t2, t0, FIX 
+
 
     ret  # Retorna caso nenhuma tecla seja pressionada
 
 FIM:
     ret
  ##########################################
+DIMINUI_VIDAS:
+    la t0, VIDAS       # Carrega o endereço da variável VIDAS
+    lb t1, 0(t0)       # Carrega o valor de VIDAS
+    beqz t1, FIM       # Se VIDAS já for 0, não decrementar
+    addi t1, t1, -1    # Decrementa VIDAS
+    sb t1, 0(t0)       # Atualiza VIDAS na memória
+    jal PRINTAR_VIDAS  # Atualiza o HUD de vidas
+    ret
 PRINTAR_FASES:
     la t0, FASES #FASES eh um .byte 1 , pq come?a na fase 1
 	lb t1, 0(t0) #t1 = numero da fase atual
@@ -222,6 +259,7 @@ PRINTAR_VIDAS:
 	beq t1, t2, PRINT_VIDA1 # se s10 = 1 , mostra 1 vida
 	beq t1, t3, PRINT_VIDA2 # se s10 = 2 , mostra 2 vida
 	beq t1, t4, PRINT_VIDA3 # se s10 = 3 , mostra 3 vida
+    beqz t1, PRINT_GAMEOVER 
 	ret
 PRINT_VIDA3:
 	la a0, vidas3 #caregando a imagem das 3 vidas
@@ -487,10 +525,11 @@ CHAR_MOVE_DOWN:
     
 
 PRINT:
-    # a0, endere?o da imagem
+    # a0 = endereco da imagem
     # a1 = x
     # a2 = y
     # a3 = frame
+    # a4 = sentido da imagem
     # Desenha a imagem
     li t0, 0xFF0
     add t0, t0, a3      # Endereco do frame atual (0 ou 1)
@@ -556,6 +595,10 @@ PRINT_JANELAS:
         lh t3, 2(s1) # t3 = y da janela
         lh t1, 4(s1) # Se eh janela
         lh t6, 6(s1) # status da janela
+        li t0, 12
+        bne t0, s2, AFTER_SOMA
+        addi t2, t2, -5
+        AFTER_SOMA:
 
         li t5, 1
         bne t1, t5, END_OF_ANIMATION_FUNCTION_PRINT_WINDOW
@@ -595,16 +638,16 @@ FIX:
 
     la t0, char_data    # t0 = endereco do personagem (x, y)
     li t1, 1
-    li s5, 0
+    li s9, 0
     sh t1, 8(t0)
 
     ret
 
 FIX_ANIMATION:
     la t0, char_data
-    addi s5, s5, 1
+    addi s9, s9, 1
     li t1, 5
-    bgt s5, t1, SECOND_FRAME_FIX
+    bgt s9, t1, SECOND_FRAME_FIX
 
     FIRST_FRAME_FIX:
         la a0, fix1   # a0 = endereco da imagem do personagem
@@ -629,7 +672,7 @@ FIX_ANIMATION:
 
     call PRINT
     li t1, 8
-    bge s5, t1, END_FIX_ANIMATION
+    bge s9, t1, END_FIX_ANIMATION
     jalr t0, a6, 0
     
     END_FIX_ANIMATION:
@@ -649,9 +692,19 @@ FIX_ANIMATION:
         addi t1, t1, 1
         sh t1, 6(a0)
 
+        la t4, Pontos
+        lh t5, 0(t4)
+        addi t5, t5, 100
+        sh t5, 0(t4) 
+
         jalr t0, a6, 0
 
 MOVE_RALPH:
+
+    la t5, ralph_animation_data
+    li t0, 1
+    lh t2, 0(t5)
+    beq t2, t0, END_RALPH_MOVE # Se ja esta em movimento, nao inicia outro
 
     li a7, 30
     ecall
@@ -660,9 +713,32 @@ MOVE_RALPH:
     lw t0, 0(t4) # Ms do fim da ultima movimentacao
     sub t1, a0, t0
 
-    li t2, 1000 # Intervalo em ms entre cada movimentacao
-    bltu t1, t2, END_RALPH_MOVE
+    lh t6, 10(t5)
+    li t0, 1
+    beq t6, t0, LOAD_WALK_DELAY
+    LOAD_ATTACK_DELAY:
+        li t2, 200 # Intervalo em ms entre cada movimentacao
+        j AFTER_LOAD_DELAY
+    LOAD_WALK_DELAY:
+        li t2, 500 # Intervalo em ms entre cada movimentacao
+    AFTER_LOAD_DELAY:
+    bltu t1, t2, END_RALPH_MOVE # Se nao passou 1000ms desde a ultima movimentacao, fica parado
 
+    lh t6, 10(t5)
+    li t0, 1
+    beq t0, t6, INICIO_ANDAR
+
+    INICIAR_ATAQUE:
+        # Se ultimo movimento foi andar, proximo eh ataque:
+        # Salvar como atacando
+        # zerar todas as variaveis
+        li t0, 0
+        sh t0, 10(t5)
+        li t0, 1
+        sh t0, 0(t5)
+        j END_RALPH_MOVE 
+
+    INICIO_ANDAR:
     li t0, 1
     la t1, ralph_animation_data
     lh t2, 0(t1)
@@ -671,7 +747,7 @@ MOVE_RALPH:
 
     SORTEAR:   
         li a0, 0
-        li a1, 4
+        li a1, 5
         li a7, 42
         ecall
         li t1, 2 
@@ -702,7 +778,7 @@ MOVE_RALPH:
     AFTER_SAVE_DIRECTION:
 
     END_RALPH_MOVE: 
-	jalr t1, s7, 0
+	    jalr t1, s7, 0
 
 RALPH_ANIMATION:
     la t2, ralph_data
@@ -710,63 +786,141 @@ RALPH_ANIMATION:
     lh a2, 2(t2)          # y do ralph
     mv a3, s0          # a3 = frame atual (0 ou 1)
     la t0, ralph_animation_data
-    lh a4, 4(t0)  
-    
-    lh t1, 6(t0)
-    addi t1, t1, 1
-    sh t1, 6(t0)
-    li t4, 5
-    blt t1, t4, AFTER_CHANGE_RALPH_SPRITE
+    lh a4, 4(t0)
 
-    li t1, 0
-    sh t1, 6(t0)
-    
-    lh t1, 8(t0)
-    li t4, 1
-    beq t4, t1, SET_IMAGE_0
-    SET_IMAGE_1:
-        sh t4, 8(t0)
-        j AFTER_CHANGE_RALPH_SPRITE
-    SET_IMAGE_0:
-        li t4, 0
-        sh t4, 8(t0)
+    lh t1, 10(t0)
+    li t3, 0
+    beq t1, t3, ATTACK_ANIMATION
 
-    AFTER_CHANGE_RALPH_SPRITE:
+    # Se nao cair no attack animation:
+    WALK_ANIMATION:    
+        lh t1, 6(t0)
+        addi t1, t1, 1
+        sh t1, 6(t0)
+        li t4, 5
+        blt t1, t4, AFTER_CHANGE_RALPH_SPRITE
 
-    li t1, 0
-    lh t4, 8(t0)
-    beq t1, t4, LOAD_RALPH_WALK_2
+        li t1, 0
+        sh t1, 6(t0)
+        
+        lh t1, 8(t0)
+        li t4, 1
+        beq t4, t1, SET_IMAGE_0
+        SET_IMAGE_1:
+            sh t4, 8(t0)
+            j AFTER_CHANGE_RALPH_SPRITE
+        SET_IMAGE_0:
+            li t4, 0
+            sh t4, 8(t0)
 
-    LOAD_RALPH_WALK_1:
-        la a0, RalphWalk1  # Carrega o endereco da imagem do ralph
-        j AFTER_LOAD_RALPH_WALK
-    LOAD_RALPH_WALK_2:
-        la a0, RalphWalk2  # Carrega o endereco da imagem do ralph
-    AFTER_LOAD_RALPH_WALK:
+        AFTER_CHANGE_RALPH_SPRITE:
 
-    lh t1, 2(t0) # X alvo da animacao
-    beq t1, a1, END_RALPH_ANIMATION
+        li t1, 0
+        lh t4, 8(t0)
+        beq t1, t4, LOAD_RALPH_WALK_2
 
-    bge a1, t1, SUB_X
-    SUM_X:  
-        addi t0, a1, 3 # t0 = novo x
-        bge t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
-        j AFTER_CALC_NEW_X
+        LOAD_RALPH_WALK_1:
+            la a0, RalphWalk1  # Carrega o endereco da imagem do ralph
+            j AFTER_LOAD_RALPH_WALK
+        LOAD_RALPH_WALK_2:
+            la a0, RalphWalk2  # Carrega o endereco da imagem do ralph
+        AFTER_LOAD_RALPH_WALK:
 
-    SUB_X:
-        addi t0, a1, -3 # t0 = novo x
-        ble t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
-        j AFTER_CALC_NEW_X
+        lh t1, 2(t0) # X alvo da animacao
+        beq t1, a1, END_RALPH_ANIMATION
 
-    AFTER_CALC_NEW_X:
-    sh t0, 0(t2)
-    call PRINT
-	jalr t1, s7, 0
+        bge a1, t1, SUB_X
+        SUM_X:  
+            addi t0, a1, 3 # t0 = novo x
+            bge t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
+            j AFTER_CALC_NEW_X
+
+        SUB_X:
+            addi t0, a1, -3 # t0 = novo x
+            ble t0, t1, END_RALPH_ANIMATION # Se passar do ponto alvo, acaba a animacao
+            j AFTER_CALC_NEW_X
+
+        AFTER_CALC_NEW_X:
+        sh t0, 0(t2)
+        call PRINT
+        jalr t1, s7, 0
+
+    ATTACK_ANIMATION:
+        lh t1, 6(t0)
+        addi t1, t1, 1
+        sh t1, 6(t0)
+        li t4, 5
+        beq t1, t4, CHANGE_RALPH_ATTACK_SPRITE
+        li t4, 10
+        beq t1, t4, CHANGE_RALPH_ATTACK_SPRITE
+        li t4, 15
+        beq t1, t4, CHANGE_RALPH_ATTACK_SPRITE 
+        li t4, 16
+        beq t1, t4, CALL_CREATE_BRICK 
+        li t4, 20
+        beq t1, t4, CHANGE_RALPH_ATTACK_SPRITE
+        li t4, 25
+        beq t1, t4, CHANGE_RALPH_ATTACK_SPRITE
+        li t4, 30
+        beq t1, t4, END_RALPH_ATTACK
+
+        j AFTER_CHANGE_RALPH_ATTACK_SPRITE
+
+        CALL_CREATE_BRICK:
+            lh a0, 0(t2)
+            call CREATE_BRICK
+            
+        j AFTER_CHANGE_RALPH_ATTACK_SPRITE
+        
+        CHANGE_RALPH_ATTACK_SPRITE:
+            sh t1, 6(t0)
+            lh t1, 8(t0)
+            li t4, 1
+            beq t4, t1, SET_IMAGE_0_ATTACK
+            SET_IMAGE_1_ATTACK:
+                sh t4, 8(t0)
+                j AFTER_CHANGE_RALPH_ATTACK_SPRITE
+            SET_IMAGE_0_ATTACK:
+                li t4, 0
+                sh t4, 8(t0)
+
+        AFTER_CHANGE_RALPH_ATTACK_SPRITE:
+
+        li t1, 0
+        lh t4, 8(t0)
+        beq t1, t4, LOAD_RALPH_ATTACK_2
+
+        LOAD_RALPH_ATTACK_1:
+            la a0, RalphAttack1  # Carrega o endereco da imagem do ralph
+            j AFTER_LOAD_RALPH_ATTACK
+        LOAD_RALPH_ATTACK_2:
+            la a0, RalphAttack2  # Carrega o endereco da imagem do ralph
+        AFTER_LOAD_RALPH_ATTACK:
+        addi a1, a1, -10
+        call PRINT
+	    jalr t1, s7, 0
+
+    END_RALPH_ATTACK:
+        la t0, ralph_animation_data
+        li t2, 0
+        sh t2, 0(t0) # Salva animacao como 0
+        li t2, 1
+        sh t2, 10(t0) # Salva animacao como 0
+
+        la t2, ralph_animation_delay
+        li a7, 30
+        ecall 
+        sw a0, 0(t2)
+
+	    jalr t1, s7, 0
+
 
     END_RALPH_ANIMATION:
         la t0, ralph_animation_data
         li t2, 0
         sh t2, 0(t0) # Salva animacao como 0
+        li t2, 0
+        sh t2, 10(t0) # Salva animacao como 0
 
         la t2, ralph_animation_delay
         li a7, 30
@@ -777,6 +931,122 @@ RALPH_ANIMATION:
         sh t1, 0(t2)
 	    jalr t1, s7, 0
 
+CREATE_BRICK:
+    la t0, bricks
+    lh t1, 0(t0) 
+    li t2, -1 # cont
+    addi t0, t0, -2
+    FIND_SLOT_TO_BRICK: beq t1, t2, RET_WITHOUT_CREATE_BRICK
+        addi t2, t2, 1
+        addi t0, t0, 4
+        lh t3, 0(t0) # t3 = x da janela
+        bnez t3, FIND_SLOT_TO_BRICK
+        lh t3, 2(t0) # t3 = y da janela
+        bnez t3, FIND_SLOT_TO_BRICK
+    AFTER_FIND_SLOT_TO_BRICK:
+        la t6, windows
+        addi t6, t6, -8
+        SEARCH_REAL_WINDOW:
+            addi t6, t6, 8
+            lh t4, 0(t6) # X da janela atual
+            la t5, ralph_data
+            lh t5, 0(t5) # x do ralph
+            sub t5, t4, t5 # x da janela - x do ralph
+            li a6, 18
+            bgeu t5, a6, SEARCH_REAL_WINDOW
+
+        sh t4, 0(t0) # x do novo tijolo
+        li t5, 10
+        sh t5, 2(t0) # y do novo tijolo
+
+    RET_WITHOUT_CREATE_BRICK:
+        ret
+
+PRINT_AND_MOVE_BRICKS:  
+    la s11, bricks
+    # lh t1, 0(s11) 
+    li t1, 4 # Remover esta linha
+    li s10, 0 # cont
+    addi s11, s11, -2
+    NEXT_BRICK: 
+        beq t1, s10, END_OF_BRICKS
+        addi s10, s10, 1
+        addi s11, s11, 4
+        lh t3, 0(s11) # t3 = x da janela
+        beqz t3, NEXT_BRICK
+        lh t3, 2(s11) # t3 = y da janela
+        beqz t3, NEXT_BRICK
+        
+        lh t5, 0(s11)# x do tijolo
+        lh t6, 2(s11)# y do tijolo
+
+        addi t6, t6, 2
+        li t0, 240
+        ble t6, t0, PRINT_BRICK
+        DELETE_BRICK:
+            li t0, 0
+            sh t0, 0(s11)
+            sh t0, 2(s11)
+            j NEXT_BRICK
+
+        PRINT_BRICK: 
+        sh t6, 2(s11)
+        la a0, tijolos
+        mv a1, t5
+        mv a2, t6
+        mv a3, s0
+        li a4, 0
+
+        call PRINT
+        j NEXT_BRICK
+
+    END_OF_BRICKS:
+        jalr t1, s7, 0
+
+TEST_BRICK_COLISION_WITH_CHAR:
+    la t4, char_data
+    lh t4, 0(t4) # x do felix
+
+    la t0, bricks
+    lh t1, 0(t0) 
+    li t2, -1 # cont
+    addi t0, t0, -2
+    FIND_BRICK_IN_THE_SAME_COLUMN: beq t1, t2, END_TEST_BRICK_COLISION
+        addi t2, t2, 1
+        addi t0, t0, 4
+        lh t3, 0(t0) # t3 = x da janela
+        bne t3, t4, FIND_BRICK_IN_THE_SAME_COLUMN
+
+
+    lh t1, 2(t0) # y do tijolo
+    addi t1, t1, 20 # y do tijolo + altura dele (y da parte de baixo do tijolo)
+    la t4, char_data
+    lh t4, 2(t4) # y do personagem
+    blt t1, t4, END_TEST_BRICK_COLISION # Se a parte de baixo do tijolo estiver mais alta que o personagem, nao tem colisao
+    
+
+    addi t4, t4, 20 # y do personagem + altura do personagem (y da parte de baixo do personagem)
+    lh t1, 2(t0) # y do tijolo
+    bgt t1, t4, END_TEST_BRICK_COLISION
+
+    li t2, 0
+    sh t2, 0(t0)
+    sh t2, 2(t0)
+    call DIMINUI_VIDAS
+
+    
+    END_TEST_BRICK_COLISION:
+
+    jalr t1, s7, 0
+
+PRINT_GAMEOVER:
+	la a0, vidas0
+	MACRO_PRINT_LIFES
+	la a0,gameover
+	MACRO_PRINT_GAMEOVER
+	li a0, 5000
+	call SLEEP
+	call FIM_DO_JOGO
 
 SLEEP:
     # Funcao de delay
@@ -784,4 +1054,98 @@ SLEEP:
     ecall
     ret
 
-.include "musica.s"
+FIM_DO_JOGO:
+    li a7,10
+    ecall
+
+PRINTAR_PONTUACAO:
+			
+addi a1, a1, -1			
+jal pow
+
+mv a5, a4 
+mv a4, a3 
+mv a3, a0 
+mv s10, a2 
+
+li s4, 10
+li t0, 1
+
+LP32:
+	beq s10, t0, LE32		
+	#---------------
+	div t5, a3, s10			
+	rem a3, a3, s10			
+
+	mv a0, t5
+	mv a1, a4
+	mv a2, a5
+	jal renderDigit			
+
+	addi a4, a4, 8			
+	#---------------
+	div s10, s10, s4		
+	jal zero, LP32			
+LE32:
+
+mv a0, a3					
+mv a1, a4
+mv a2, a5
+jal renderDigit
+
+jalr t1, s7, 0
+
+renderDigit:
+la s5, nums
+li s1, 128		
+mul s1, s1, a0		
+add s1, s1, s5	 
+li s2, tela	
+add s2, s2, s0
+slli s2, s2, 20	
+li s3, 320		
+
+mul t1, s3, a2		
+add t1, t1, a1		
+add t1, t1, s2		
+li t2, 5120		
+add t2, t2, t1		
+
+LP29:
+	bge t1, t2, LE29	
+	#---------------
+	addi t3, t1, 8	
+	LP30:
+		bge t1, t3, LE30	
+		#---------------
+		lb t4, 0(s1)	
+		sb t4, 0(t1)	
+		addi s1, s1, 1	
+		#---------------
+		addi t1, t1, 1	
+		jal zero, LP30 	
+	LE30: 
+	#---------------
+	addi t1, t1, 312	
+	jal zero, LP29	
+LE29:
+ret
+
+pow:
+li t0, 0
+li t1, 1
+li t2, 10
+LP31:
+	bge t0, a1, LE31		
+	#---------------
+	mul t1, t1, t2		
+	#---------------
+	addi t0, t0, 1			
+	jal zero, LP31			
+LE31:
+mv a2, t1				
+ret
+
+jalr t1, s7, 0
+
+.include "musica.s" 
