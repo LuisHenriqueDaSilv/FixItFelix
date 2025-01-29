@@ -65,7 +65,7 @@
     .include "assets/ralph/attack/RalphAttack2.data"
     .include "assets/ralph/attack/RalphAttack1.data"
     .include "nums.data"
-    .include "assets/vitoria/vitoriafase1.data"
+    .include "assets/vitoriafase1.data"
 
 
     .include "assets/vidas/0vidas.data"
