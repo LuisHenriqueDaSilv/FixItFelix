@@ -11,11 +11,11 @@
 	call PRINT
 .end_macro
 
-.macro MACRO_PRINT_GAMEOVER
+.macro MACRO_PRINT_GAMEOVER_VITORIA
 	li a1, 40
 	li a2, 66
 	mv a3, s0          # a3 = frame atual (0 ou 1)
-    li a4,0
+    	li a4,0
 	call PRINT
 .end_macro
 
@@ -65,6 +65,7 @@
     .include "assets/ralph/attack/RalphAttack2.data"
     .include "assets/ralph/attack/RalphAttack1.data"
     .include "nums.data"
+    .include "assets/vitoria/vitoriafase1.data"
 
 
     .include "assets/vidas/0vidas.data"
@@ -210,9 +211,9 @@ KEY2:
     beq t2, t0, CHAR_MOVE_DOWN
     li t0, 'S'
     beq t2, t0, CHAR_MOVE_DOWN
-    li t0, 'e'
+    li t0, 'l'
     beq t2, t0, FIX
-    li t0, 'E'
+    li t0, 'L'
     beq t2, t0, FIX 
 
 
@@ -222,11 +223,11 @@ FIM:
     ret
  ##########################################
 DIMINUI_VIDAS:
-    la t0, VIDAS       # Carrega o endereço da variável VIDAS
+    la t0, VIDAS       # Carrega o endereÃ§o da variÃ¡vel VIDAS
     lb t1, 0(t0)       # Carrega o valor de VIDAS
-    beqz t1, FIM       # Se VIDAS já for 0, não decrementar
+    beqz t1, FIM       # Se VIDAS jÃ¡ for 0, nÃ£o decrementar
     addi t1, t1, -1    # Decrementa VIDAS
-    sb t1, 0(t0)       # Atualiza VIDAS na memória
+    sb t1, 0(t0)       # Atualiza VIDAS na memÃ³ria
     jal PRINTAR_VIDAS  # Atualiza o HUD de vidas
     ret
 PRINTAR_FASES:
@@ -246,8 +247,9 @@ PRINT_FASE1:
 PRINT_FASE2:
     la a0, fase2
     MACRO_PRINT_LEVEL
-	jalr t1, s7, 0
- 
+  
+     jalr t1, s7, 0
+
     ##########################################   
 PRINTAR_VIDAS:
 	la t0, VIDAS #VIDAS ? um .byte 3 , pq tem 3 vidas
@@ -259,7 +261,7 @@ PRINTAR_VIDAS:
 	beq t1, t2, PRINT_VIDA1 # se s10 = 1 , mostra 1 vida
 	beq t1, t3, PRINT_VIDA2 # se s10 = 2 , mostra 2 vida
 	beq t1, t4, PRINT_VIDA3 # se s10 = 3 , mostra 3 vida
-    beqz t1, PRINT_GAMEOVER 
+    	beqz t1, PRINT_GAMEOVER 
 	ret
 PRINT_VIDA3:
 	la a0, vidas3 #caregando a imagem das 3 vidas
@@ -1043,7 +1045,7 @@ PRINT_GAMEOVER:
 	la a0, vidas0
 	MACRO_PRINT_LIFES
 	la a0,gameover
-	MACRO_PRINT_GAMEOVER
+	MACRO_PRINT_GAMEOVER_VITORIA
 	li a0, 5000
 	call SLEEP
 	call FIM_DO_JOGO
@@ -1093,8 +1095,27 @@ mv a1, a4
 mv a2, a5
 jal renderDigit
 
-jalr t1, s7, 0
+    # Verificar a pontuação
+    la t0, Pontos            # Carrega o endereço de Pontos
+    lh t1, 0(t0)             # Lê a pontuação atual de Pontos como half (16 bits)
+    li t2, 2600              # Carrega o valor 2600 (pontuação de 2600)
+    beq t1, t2, ATINGIU_2600  # Se a pontuação for maior ou igual a 2600, pula para ATINGIU_2600
 
+jalr t1, s7, 0
+ ret
+ATINGIU_2600:
+    # Mudar FASES para 2
+    la t0, FASES             # Carrega o endereço de FASES
+    li t2, 2                 # Carrega o valor 2 (fase 2)
+    sb t2, 0(t0)             # Armazena 2 em FASES
+    
+     la a0,vitoriafase1
+	MACRO_PRINT_GAMEOVER_VITORIA
+	li a0, 1500
+	call SLEEP
+    jalr t1, s7, 0           # Continua o fluxo normal
+    ret
+    
 renderDigit:
 la s5, nums
 li s1, 128		
@@ -1148,4 +1169,10 @@ ret
 
 jalr t1, s7, 0
 
+
+
 .include "musica.s" 
+
+FIMZAO:
+li a7,10
+ecall
