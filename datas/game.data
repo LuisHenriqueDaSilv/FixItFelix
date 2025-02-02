@@ -1,0 +1,9 @@
+#			    x   y   l, aceleracaoY, fixing (l: 1=esquerda ou 0=direita)
+char_data: .half 85, 194, 1, 		0,     0
+fases_pos: .half 304, 1
+barra_vidas_pos: .half 1 , 26   #posicao que barra de vida aparece
+score_pos: .half  1 , 12  	#posicao em que aparcee a pontuacao
+VIDAS: .byte 3   		#numero maximo de vidas
+FASES: .byte 1 #numero da fase inicial
+char_animation_data: .half 0, 0, 0, 0, 0 # Esta em animacao, chegou no pico y, x alvo, y alvo, caindo
+Pontos: .half 0
