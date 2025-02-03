@@ -12,9 +12,13 @@ TOCAR_EFEITOS_SONOROS:
         lh t1, 0(t0)
         beq t1, t2, TOCAR_RALPH_SOUND
     POS_TOCAR_RALPH:
-        la t0, FELIX_WALK_SOUND
+        la t0, WIN_SOUND
         lh t1, 0(t0)
-        # beq t1, t2, TOCAR_WALK_FELIX_SOUND
+        beq t1, t2, TOCAR_WIN_SOUND
+    POS_TOCAR_WIN_SOUND:
+    #     la t0, FELIX_WALK_SOUND
+    #     lh t1, 0(t0)
+    #     # beq t1, t2, TOCAR_WALK_FELIX_SOUND
     POS_TOCAR_FELIX_WALK:
     j POS_SONS
     TOCAR_BACKGROUND:
@@ -31,8 +35,6 @@ TOCAR_EFEITOS_SONOROS:
         call TOCA_MUSICA
         j POS_TOCAR_FIX
     TOCAR_RALPH_SOUND:
-        # li a7, 10
-        # ecall
         la a4, RALPH_SOUND
         la a5, TAMANHO_RALPH_SOUND
         la a6, NOTAS_RALPH_SOUND
@@ -46,6 +48,13 @@ TOCAR_EFEITOS_SONOROS:
         call TEST_END_SOUND
         call TOCA_MUSICA
         j POS_TOCAR_FELIX_WALK
+    TOCAR_WIN_SOUND:
+        la a4, WIN_SOUND
+        la a5, TAMANHO_WIN_SOUND
+        la a6, NOTAS_WIN_SOUND
+        call TEST_END_SOUND
+        call TOCA_MUSICA
+        j POS_TOCAR_WIN_SOUND
     POS_SONS:
     jalr t1, s7, 0
 

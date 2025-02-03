@@ -38,6 +38,10 @@ KEY2:
     beq t2, t0, FIX
     li t0, 'L'
     beq t2, t0, FIX 
+    li t0, 'p'
+    beq t2, t0, PHASE_BYPASS
+    li t0, 'P'
+    beq t2, t0, PHASE_BYPASS 
 
 
     ret  # Retorna caso nenhuma tecla seja pressionada

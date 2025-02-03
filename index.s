@@ -1,10 +1,6 @@
 # Registradores globais (Nao pode usar)
 # s0=Frame atual
 # s7=Ponteiro para retorno em algumas funcoes (Para onde o programa deve voltar depois da chamada)
-
-
-
-#############################################################
 .data
    			   
     .include "datas/game.data"
@@ -16,6 +12,9 @@
 	.include "assets/felix/fix/fix2.data"
 	.include "assets/sounds/music.data"
     .include "assets/background2.data"
+    .include "assets/background.data"
+    .include "assets/background_black.data"
+    .include "assets/BackgroundLamar.data"
     .include "assets/fase1.data"
     .include "assets/fase2.data"
     .include "assets/tijolos.data"
@@ -30,7 +29,10 @@
     .include "assets/ralph/walk/RalphWalk2.data"
     .include "assets/ralph/attack/RalphAttack2.data"
     .include "assets/ralph/attack/RalphAttack1.data"
-    .include "nums.data"
+    .include "assets/ralph/scream/RalphScream1.data"
+    .include "assets/ralph/scream/RalphScream2.data"
+    .include "assets/ralph/RalphClimb.data"
+    .include "assets/nums.data"
     .include "assets/vitoriafase1.data"
 
     .include "assets/vidas/0vidas.data"
@@ -40,6 +42,7 @@
     .include "datas/ralph.data"
     .include "datas/bricks.data"
     .include "datas/efeitos_sonoros.data"
+    .include "datas/cutscenes.data"
 
 
 .text
@@ -50,9 +53,12 @@ GAME_LOOP:
     jal s7, TOCAR_EFEITOS_SONOROS
 
     # Configuracao do FPS do jogo (30 fps)
-    li a0, 25
+    li a0, 20
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
-    call KEY2  # Reconhece as teclas pressionadas
+
+    la t0, CUTSCENE_DATA
+    lh t1, 0(t0)
+    bnez t1, CUTSCENE
 
     la t0, char_animation_data
     lh t1, 0(t0)
@@ -142,6 +148,8 @@ GAME_LOOP:
     li a3, 18			
     li a4, 10	
     jal s7, PRINTAR_PONTUACAO
+
+    call KEY2  # Reconhece as teclas pressionadas
     
     j GAME_LOOP
 
@@ -223,6 +231,12 @@ FIM_DO_JOGO:
 
 .include "musica.s" 
 
+PHASE_BYPASS:
+    la t0, Pontos
+    li t1, 2600
+    sh t1, 0(t0)
+    ret
+
 FIMZAO:
 li a7,10
 ecall
@@ -235,3 +249,4 @@ ecall
 .include "src/print.s"
 .include "src/windows_controller.s"
 .include "src/efeitos_sonoros.s"
+.include "src/phase_transition.s"

@@ -14,11 +14,25 @@ PRINT:
     add t0, t0, a1      # Posicao exata para desenhar a imagem
     addi t1, a0, 8      # Pula as duas primeiras palavras (info da imagem)
 
+
     # Desenha linha por linha da imagem
     mv t2, zero         # Contador de linhas
     mv t3, zero         # Contador de colunas
     lw t4, 0(a0)        # Largura da imagem
     lw t5, 4(a0)        # Altura da imagem
+
+    LOOP_IGNORA_LINHA:
+        # li t6, 0  
+        bge a2, zero, POS_IGNORA_LINHA
+        addi t0, t0, 320 # Pula uma linha no endereco da tela
+        add t1, t1, t4
+        addi t5, t5 -1
+        
+        addi a2, a2, 1
+        # li a7, 10
+        # ecall 
+        j LOOP_IGNORA_LINHA
+    POS_IGNORA_LINHA:
 
     beqz a4, PRINT_LINE
     bnez a4, PRINT_INVERTED_LINE

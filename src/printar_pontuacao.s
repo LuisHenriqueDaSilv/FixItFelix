@@ -39,18 +39,10 @@ jal renderDigit
     li t2, 2600              # Carrega o valor 2600 (pontuação de 2600)
     beq t1, t2, ATINGIU_2600  # Se a pontuação for maior ou igual a 2600, pula para ATINGIU_2600
 
-jalr t1, s7, 0
+	jalr t1, s7, 0
  ret
 ATINGIU_2600:
-    # Mudar FASES para 2
-    la t0, FASES             # Carrega o endereço de FASES
-    li t2, 2                 # Carrega o valor 2 (fase 2)
-    sb t2, 0(t0)             # Armazena 2 em FASES
-    
-     la a0,vitoriafase1
-	MACRO_PRINT_GAMEOVER_VITORIA
-	li a0, 1500
-	call SLEEP
+	call START_PHASE_TRANSITION
     jalr t1, s7, 0           # Continua o fluxo normal
     ret
     
