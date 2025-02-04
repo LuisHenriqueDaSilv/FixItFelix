@@ -13,6 +13,7 @@
 	.include "assets/sounds/music.data"
     .include "assets/background2.data"
     .include "assets/background.data"
+    .include "assets/backgroundFase2.data"
     .include "assets/background_black.data"
     .include "assets/BackgroundLamar.data"
     .include "assets/fase1.data"
@@ -73,8 +74,17 @@ GAME_LOOP:
     # Alterna entre os frames do personagem
     xori s0, s0, 1
 
+    la t0, FASES
+    lb t1, 0(t0)
+    li t2, 2
+    beq t1, t2, LOAD_BACKGROUND_FASE2
     # Desenhar o background
-    la a0, background2  # Carrega o endereco do background
+    LOAD_BACKGROUND_FASE1:
+        la a0, background2  # Carrega o endereco do background
+        j POS_LOAD_BACKGROUND
+    LOAD_BACKGROUND_FASE2:
+        la a0, backgroundFase2  # Carrega o endereco do background
+    POS_LOAD_BACKGROUND:
     li a1, 0           # x do background
     li a2, 0           # y do background
     mv a3, s0          # a3 = frame atual (0 ou 1)

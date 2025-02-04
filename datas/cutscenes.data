@@ -1,4 +1,4 @@
             #Esta em animacao,           cena, frame counter
 CUTSCENE_DATA: .half 0,                  0,     0
                                    # y da primeira fase, y da segunda fase
-PHASE_BACKGROUND_TRANSITION: .half 0,                    -320
+PHASE_BACKGROUND_TRANSITION: .half 0,                    -240

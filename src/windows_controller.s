@@ -29,8 +29,15 @@ PRINT_JANELAS:
         lh t1, 4(s1) # Se eh janela
         lh t6, 6(s1) # status da janela
         li t0, 12
-        bne t0, s2, AFTER_SOMA
-        addi t2, t2, -5
+        beq t0, s2, SOMA
+        li t0, 7
+        beq t0, s2, SOMA
+        li t0, 2
+        beq t0, s2, SOMA
+
+        j AFTER_SOMA
+        SOMA:
+            addi t2, t2, -5
         AFTER_SOMA:
 
         li t5, 1
