@@ -5,6 +5,7 @@ PRINT:
     # a3 = frame
     # a4 = sentido da imagem
     # Desenha a imagem
+
     li t0, 0xFF0
     add t0, t0, a3      # Endereco do frame atual (0 ou 1)
     slli t0, t0, 20     # Move 20 bits a esquerda
@@ -68,4 +69,4 @@ PRINT:
             mv t3, zero
             addi t2, t2, 1
             bgt t5, t2, PRINT_INVERTED_LINE
-        ret
+    ret

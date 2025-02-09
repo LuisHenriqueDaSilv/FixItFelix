@@ -36,15 +36,24 @@
     .include "assets/nums.data"
     .include "assets/vitoriafase1.data"
 
+    .include "assets/duck/duck1.data"
+    .include "assets/duck/duck2.data"
+
     .include "assets/vidas/0vidas.data"
     .include "assets/gameover.data"
+    .include "assets/black.data"
 
+    .include "assets/stage.data"
+
+    .include "datas/bricks.data"
     .include "datas/janelas.data"
     .include "datas/ralph.data"
-    .include "datas/bricks.data"
     .include "datas/efeitos_sonoros.data"
     .include "datas/cutscenes.data"
-
+                     #Tem pato, x, y, contador de frames
+    DUCKS_DATA: .half 0,        0, 0, 0
+    DUCKS_Y: .half 194, 134, 74
+    DUCK_DELAY: .word 0
 
 .text
 
@@ -54,7 +63,7 @@ GAME_LOOP:
     jal s7, TOCAR_EFEITOS_SONOROS
 
     # Configuracao do FPS do jogo (30 fps)
-    li a0, 20
+    li a0, 30
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
 
     la t0, CUTSCENE_DATA
@@ -73,7 +82,7 @@ GAME_LOOP:
     
     # Alterna entre os frames do personagem
     xori s0, s0, 1
-
+    
     la t0, FASES
     lb t1, 0(t0)
     li t2, 2
@@ -139,6 +148,15 @@ GAME_LOOP:
     mv a3, s0          # a3 = frame atual (0 ou 1)
     call PRINT
     AFTER_PRINT_CHAR:
+
+    la t0, FASES
+    lb t1, 0(t0)
+    li t2, 2
+    beq t1, t2, CALL_DUCK_CONTROLLER
+    j POS_CALL_DUCK_CONTROLLER
+    CALL_DUCK_CONTROLLER:
+        jal s7, DUCK_CONTROLLER
+    POS_CALL_DUCK_CONTROLLER: 
 
     # Atualiza o frame mostrado
     li t0, 0xFF200604  # Endereco onde o indice do frame eh armazenado
@@ -260,3 +278,4 @@ ecall
 .include "src/windows_controller.s"
 .include "src/efeitos_sonoros.s"
 .include "src/phase_transition.s"
+.include "src/duck_controller.s"

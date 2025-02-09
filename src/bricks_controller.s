@@ -1,8 +1,8 @@
 CREATE_BRICK:
     la t0, bricks
-    lh t1, 0(t0) 
-    li t2, -1 # cont
-    addi t0, t0, -2
+    lh t1, 0(t0)
+    li t2, 0 # cont
+    addi t0, t0, 2
     FIND_SLOT_TO_BRICK: beq t1, t2, RET_WITHOUT_CREATE_BRICK
         addi t2, t2, 1
         addi t0, t0, 4
@@ -25,18 +25,16 @@ CREATE_BRICK:
         sh t4, 0(t0) # x do novo tijolo
         li t5, 10
         sh t5, 2(t0) # y do novo tijolo
-
     RET_WITHOUT_CREATE_BRICK:
         ret
 
 PRINT_AND_MOVE_BRICKS:  
     la s11, bricks
-    # lh t1, 0(s11) 
-    li t1, 4 # Remover esta linha
+    lh s5, 0(s11) 
     li s10, 0 # cont
     addi s11, s11, -2
     NEXT_BRICK: 
-        beq t1, s10, END_OF_BRICKS
+        beq s5, s10, END_OF_BRICKS
         addi s10, s10, 1
         addi s11, s11, 4
         lh t3, 0(s11) # t3 = x da janela
@@ -84,9 +82,8 @@ TEST_BRICK_COLISION_WITH_CHAR:
         lh t3, 0(t0) # t3 = x da janela
         bne t3, t4, FIND_BRICK_IN_THE_SAME_COLUMN
 
-
     lh t1, 2(t0) # y do tijolo
-    addi t1, t1, 20 # y do tijolo + altura dele (y da parte de baixo do tijolo)
+    addi t1, t1, 25 # y do tijolo + altura dele (y da parte de baixo do tijolo)
     la t4, char_data
     lh t4, 2(t4) # y do personagem
     blt t1, t4, END_TEST_BRICK_COLISION # Se a parte de baixo do tijolo estiver mais alta que o personagem, nao tem colisao
