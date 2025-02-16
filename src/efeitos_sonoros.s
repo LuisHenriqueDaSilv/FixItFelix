@@ -16,10 +16,10 @@ TOCAR_EFEITOS_SONOROS:
         lh t1, 0(t0)
         beq t1, t2, TOCAR_WIN_SOUND
     POS_TOCAR_WIN_SOUND:
-    #     la t0, FELIX_WALK_SOUND
-    #     lh t1, 0(t0)
-    #     # beq t1, t2, TOCAR_WALK_FELIX_SOUND
-    POS_TOCAR_FELIX_WALK:
+        la t0, BACKGROUND_INVENCIVEL
+        lh t1, 0(t0)
+        beq t1, t2, TOCAR_BACKGROUND_INVENCIVEL
+    POS_TOCAR_INVENCIVEL:
     j POS_SONS
     TOCAR_BACKGROUND:
         la a4, BACKGROUND_SOUND
@@ -41,13 +41,6 @@ TOCAR_EFEITOS_SONOROS:
         call TEST_END_SOUND
         call TOCA_MUSICA
         j POS_TOCAR_RALPH
-    TOCAR_WALK_FELIX_SOUND:
-        la a4, FELIX_WALK_SOUND
-        la a5, TAMANHO_FELIX_WALK_SOUND
-        la a6, NOTAS_FELIX_WALK_SOUND
-        call TEST_END_SOUND
-        call TOCA_MUSICA
-        j POS_TOCAR_FELIX_WALK
     TOCAR_WIN_SOUND:
         la a4, WIN_SOUND
         la a5, TAMANHO_WIN_SOUND
@@ -55,6 +48,13 @@ TOCAR_EFEITOS_SONOROS:
         call TEST_END_SOUND
         call TOCA_MUSICA
         j POS_TOCAR_WIN_SOUND
+    TOCAR_BACKGROUND_INVENCIVEL:
+        la a4, BACKGROUND_INVENCIVEL
+        la a5, TAMANHO_MUSICA_DE_FUNDO_INVENCIVEL
+        la a6, NOTAS_MUSICA_DE_FUNDO_INVENCIVEL
+        call TEST_END_SOUND
+        call TOCA_MUSICA
+        j POS_TOCAR_INVENCIVEL
     POS_SONS:
     jalr t1, s7, 0
 

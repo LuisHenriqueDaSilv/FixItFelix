@@ -51,10 +51,9 @@ PRINT_AND_MOVE_DUCK:
     blt a2, t3, DEPOIS_TESTAR_COLISAO
     addi t3, t3, 32
     bgt a2, t3, DEPOIS_TESTAR_COLISAO
-    la t0, VIDAS
-    lh t1, 0(t0)
-    addi t1, t1, -1
-    sh t1, 0(t0)
+
+    call DIMINUI_VIDAS
+
     j DELETE_DUCK
 
     DEPOIS_TESTAR_COLISAO:

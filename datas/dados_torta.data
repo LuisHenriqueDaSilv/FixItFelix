@@ -1,0 +1,7 @@
+#                 x, y
+torta_pos: .half 155, 134
+                # Tem torta no mapa,    Ja teve torta no mapa
+tem_torta: .byte 0,                     0,
+tempo_nao_torta: .word 0
+invencivel_torta: .byte 0
+tempo_invencibilidade: .word 0

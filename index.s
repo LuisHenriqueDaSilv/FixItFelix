@@ -14,8 +14,10 @@
     .include "assets/background2.data"
     .include "assets/background.data"
     .include "assets/backgroundFase2.data"
-    .include "assets/background_black.data"
-    .include "assets/BackgroundLamar.data"
+    
+    .include "assets/NovoBackgroundFase1.data"
+    .include "assets/NovoBackgroundFase2.data"
+
     .include "assets/fase1.data"
     .include "assets/fase2.data"
     .include "assets/tijolos.data"
@@ -35,6 +37,9 @@
     .include "assets/ralph/RalphClimb.data"
     .include "assets/nums.data"
     .include "assets/vitoriafase1.data"
+    .include "assets/cabecaoDoLamar.data"
+    .include "assets/torta.data"
+
 
     .include "assets/duck/duck1.data"
     .include "assets/duck/duck2.data"
@@ -45,6 +50,7 @@
 
     .include "assets/stage.data"
 
+    .include "datas/dados_torta.data"
     .include "datas/bricks.data"
     .include "datas/janelas.data"
     .include "datas/ralph.data"
@@ -99,7 +105,43 @@ GAME_LOOP:
     mv a3, s0          # a3 = frame atual (0 ou 1)
     li a4, 0
     call PRINT
+
     jal a6, PRINT_JANELAS
+
+    la t0, FASES
+    lb t1, 0(t0)
+    li t2, 2
+    bne t1, t2, DEPOIS_TORTA # Caso nao esteja na fase 2
+    la t0, tem_torta
+    lb t1, 0(t0)
+    li t2, 1
+    beq t1, t2, PRINT_TORTA # Se tem torta
+    lb t1, 1(t0)
+    li t2, 0
+    beq t1, t2, CALL_CRIAR_TORTA # Se ainda nao teve torta
+    # Se nao tem torta mas ja teve
+    j DEPOIS_TORTA
+    PRINT_TORTA:
+        la t2, torta_pos
+        lh a1, 0(t2)
+        addi a1, a1, -4
+        lh a2, 2(t2)
+        addi a2, a2, 14
+        la a0, torta
+        mv a3, s0
+        call PRINT
+        addi a1, a1, 4
+        addi a2, a2, -14
+        la t0, char_data
+        lh t1, 0(t0)
+        bne t1, a1, DEPOIS_TORTA
+        lh t1, 2(t0)
+        bne t1, a2, DEPOIS_TORTA
+        call LIDAR_COLISAO_TORTA
+        j DEPOIS_TORTA
+    CALL_CRIAR_TORTA:
+        call CRIAR_TORTA
+    DEPOIS_TORTA:
 
     jal s7, PRINT_AND_MOVE_BRICKS
 
@@ -149,6 +191,26 @@ GAME_LOOP:
     call PRINT
     AFTER_PRINT_CHAR:
 
+
+    la t0, invencivel_torta
+    lb t1, 0(t0)
+    beqz t1, DEPOIS_PRINTAR_CABECA_INVENCIVEL
+
+    la a0, cabecaoDoLamar
+    la t0, char_data
+    lh a1, 0(t0) 
+    lh a2, 2(t0)    
+    addi a1, a1, -5
+    addi a2, a2, -10
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    lh t2, 4(t0)
+    xori t2, t2, 1
+    mv a4, t2       
+    call PRINT
+    call TESTAR_FIM_INVENCIBILIDADE
+    DEPOIS_PRINTAR_CABECA_INVENCIVEL:
+
+
     la t0, FASES
     lb t1, 0(t0)
     li t2, 2
@@ -183,12 +245,16 @@ GAME_LOOP:
 
  ##########################################
 DIMINUI_VIDAS:
+    la t0, invencivel_torta
+    lb t1, 0(t0)
+    bnez t1, RETORNO_DIMINUI_VIDAS
     la t0, VIDAS       # Carrega o endereÃ§o da variÃ¡vel VIDAS
     lb t1, 0(t0)       # Carrega o valor de VIDAS
     beqz t1, FIM       # Se VIDAS jÃ¡ for 0, nÃ£o decrementar
     addi t1, t1, -1    # Decrementa VIDAS
     sb t1, 0(t0)       # Atualiza VIDAS na memÃ³ria
-    jal PRINTAR_VIDAS  # Atualiza o HUD de vidas
+    # jal PRINTAR_VIDAS  # Atualiza o HUD de vidas
+    RETORNO_DIMINUI_VIDAS:
     ret
 PRINTAR_FASES:
     la t0, FASES #FASES eh um .byte 1 , pq come?a na fase 1
@@ -279,3 +345,4 @@ ecall
 .include "src/efeitos_sonoros.s"
 .include "src/phase_transition.s"
 .include "src/duck_controller.s"
+.include "src/torta_controller.s"

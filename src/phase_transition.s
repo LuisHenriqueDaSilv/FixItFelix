@@ -326,6 +326,11 @@ SCENE5:
         
     FIM_LOOP_ZERAR_JANELAS:
 
+    li a7, 30
+    ecall # a0 = ms atual
+    li t0, tempo_nao_torta
+    sw a0, 0(t0)
+
     la t0, BACKGROUND_SOUND
     li t1, 1
     sw t1,0(t0)
