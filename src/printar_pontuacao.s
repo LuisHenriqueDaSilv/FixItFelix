@@ -38,11 +38,15 @@ jal renderDigit
     lh t1, 0(t0)             # Lê a pontuação atual de Pontos como half (16 bits)
     li t2, 2600              # Carrega o valor 2600 (pontuação de 2600)
     beq t1, t2, ATINGIU_2600  # Se a pontuação for maior ou igual a 2600, pula para ATINGIU_2600
-
+    li t2, 5700              # Carrega o valor 2600 (pontuação de 2600)
+    beq t1, t2, ATINGIU_5700  # Se a pontuação for maior ou igual a 2600, pula para ATINGIU_2600
 	jalr t1, s7, 0
- ret
 ATINGIU_2600:
 	call START_PHASE_TRANSITION
+    jalr t1, s7, 0           # Continua o fluxo normal
+    ret
+ATINGIU_5700:
+	call START_PHASE_TRANSITION_2
     jalr t1, s7, 0           # Continua o fluxo normal
     ret
     

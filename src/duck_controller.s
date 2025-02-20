@@ -78,11 +78,12 @@ PRINT_AND_MOVE_DUCK:
     call PRINT
 
     li t2, 30
-    bgt a1, t2, NAO_PRINTA_FUNDO 
+    bgt a1, t2, NAO_PRINTA_FUNDO
     la a0, black
-    li a1, 290
+    li a1, 259
     li a2, 0
     mv a3, s0
+    li a4, 0
     call PRINT
 
     la a0, stage

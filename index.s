@@ -11,12 +11,14 @@
 	.include "assets/felix/fix/fix1.data"
 	.include "assets/felix/fix/fix2.data"
 	.include "assets/sounds/music.data"
-    .include "assets/background2.data"
     .include "assets/background.data"
     .include "assets/backgroundFase2.data"
+    .include "assets/backgroundFase3.data"
     
     .include "assets/NovoBackgroundFase1.data"
     .include "assets/NovoBackgroundFase2.data"
+    .include "assets/fase2Consertado.data"
+    
 
     .include "assets/fase1.data"
     .include "assets/fase2.data"
@@ -49,6 +51,7 @@
     .include "assets/black.data"
 
     .include "assets/stage.data"
+    .include "assets/score.data"
 
     .include "datas/dados_torta.data"
     .include "datas/bricks.data"
@@ -69,7 +72,7 @@ GAME_LOOP:
     jal s7, TOCAR_EFEITOS_SONOROS
 
     # Configuracao do FPS do jogo (30 fps)
-    li a0, 30
+    li a0, 27
     call SLEEP  # A funcao sleep faz o sistema "dormir" pela quantidade de milissegundos definido em a0
 
     la t0, CUTSCENE_DATA
@@ -95,7 +98,7 @@ GAME_LOOP:
     beq t1, t2, LOAD_BACKGROUND_FASE2
     # Desenhar o background
     LOAD_BACKGROUND_FASE1:
-        la a0, background2  # Carrega o endereco do background
+        la a0, background  # Carrega o endereco do background
         j POS_LOAD_BACKGROUND
     LOAD_BACKGROUND_FASE2:
         la a0, backgroundFase2  # Carrega o endereco do background
@@ -107,6 +110,20 @@ GAME_LOOP:
     call PRINT
 
     jal a6, PRINT_JANELAS
+
+    la a0, stage
+    li a1, 256           # x do background
+    li a2, 1           # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
+
+    la a0, score
+    li a1, 10           # x do background
+    li a2, 0           # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
 
     la t0, FASES
     lb t1, 0(t0)
@@ -169,7 +186,7 @@ GAME_LOOP:
 
     # Desenhar o personagem
     la t0, char_data    # t0 = endereco do personagem (x, y)
-    lh t1, 8(t0)
+    lh t1, 8(t0) # se esta concertando
     li t2, 1
     la a6, AFTER_PRINT_CHAR
     beq t1, t2, FIX_ANIMATION
@@ -198,15 +215,25 @@ GAME_LOOP:
 
     la a0, cabecaoDoLamar
     la t0, char_data
-    lh a1, 0(t0) 
+    lh a1, 0(t0) # x
     lh a2, 2(t0)    
     addi a1, a1, -5
     addi a2, a2, -10
     mv a3, s0          # a3 = frame atual (0 ou 1)
     lh t2, 4(t0)
-    xori t2, t2, 1
-    mv a4, t2       
+    xori a4, t2, 1
+
+    la t0, char_data    # t0 = endereco do personagem (x, y)
+    lh t1, 8(t0) # se esta concertando
+
+    beqz t1, IMPRIMIR_CABECA
+    addi a1, a1, -3
+    bnez a4, IMPRIMIR_CABECA
+    addi a1, a1, 6
+
+    IMPRIMIR_CABECA:       
     call PRINT
+    
     call TESTAR_FIM_INVENCIBILIDADE
     DEPOIS_PRINTAR_CABECA_INVENCIVEL:
 
@@ -236,7 +263,7 @@ GAME_LOOP:
     lh a0, 0(a0)
     li a1, 4	
     li a3, 18			
-    li a4, 10	
+    li a4, 15	
     jal s7, PRINTAR_PONTUACAO
 
     call KEY2  # Reconhece as teclas pressionadas
@@ -327,9 +354,17 @@ FIM_DO_JOGO:
 
 PHASE_BYPASS:
     la t0, Pontos
+    lh t3, 0(t0)
+    li t1, 2700
+    bgt t3, t1, BY_PASS_FASE_2# ja ta na fase 2
+    beq t3, t1, BY_PASS_FASE_2# ja ta na fase 2
     li t1, 2600
     sh t1, 0(t0)
     ret
+    BY_PASS_FASE_2:
+        li t1, 5700
+        sh t1, 0(t0)
+        ret
 
 FIMZAO:
 li a7,10

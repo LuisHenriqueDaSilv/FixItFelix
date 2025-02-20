@@ -33,6 +33,25 @@
     call PRINT
 .end_macro
 
+.macro PRINT_TWO_BACKGROUND_PHASE_3
+    # a5 = y do segundo background 
+    # a6 = y do primeiro background 
+    la a0, backgroundFase3  # Carrega o endereco do background
+    li a1, 0           # x do background
+    addi a2, a5, 0           # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
+
+    la a0, fase2Consertado  # Carrega o endereco do background
+    li a1, 0           # x do background
+    addi a2, a6, 0           # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
+.end_macro
+
+
 .macro PRINT_BACKGROUND
     la a0, background  # Carrega o endereco do background
     li a1, 0           # x do background
@@ -43,7 +62,26 @@
 .end_macro
 
 .macro PRINT_BACKGROUND_PHASE_2
+    la a0, fase2Consertado  # Carrega o endereco do background
+    li a1, 0           # x do background
+    li a2, 0          # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
+.end_macro
+
+.macro PRINT_BACKGROUND_PHASE_2_QUEBRADO
     la a0, backgroundFase2  # Carrega o endereco do background
+    li a1, 0           # x do background
+    li a2, 0          # y do background
+    mv a3, s0          # a3 = frame atual (0 ou 1)
+    li a4, 0
+    call PRINT
+.end_macro
+
+
+.macro PRINT_BACKGROUND_PHASE_3
+    la a0, backgroundFase3  # Carrega o endereco do background
     li a1, 0           # x do background
     li a2, 0          # y do background
     mv a3, s0          # a3 = frame atual (0 ou 1)
@@ -59,6 +97,14 @@ START_PHASE_TRANSITION:
     li t2, 2                 # Carrega o valor 2 (fase 2)
     sb t2, 0(t0)             # Armazena 2 em FASES
     ret
+
+START_PHASE_TRANSITION_2:
+    la t0,CUTSCENE_DATA
+    li t1, 1
+    sh t1, 0(t0)
+    li t1, 5
+    sh t1, 2(t0)
+    j GAME_LOOP
 
 CUTSCENE:
     li t0, 0xFF200604  # Endereco onde o indice do frame eh armazenado
@@ -77,6 +123,16 @@ CUTSCENE:
     beq t1, t2, SCENE4
     li t1, 4
     beq t1, t2, SCENE5
+    li t1, 5
+    beq t1, t2, SCENE6
+    li t1, 6
+    beq t1, t2, SCENE7
+    li t1, 7
+    beq t1, t2, SCENE8
+    li t1, 8
+    beq t1, t2, SCENE9
+    li t1, 9
+    beq t1, t2, SCENE10
     j GAME_LOOP
 
 SCENE1:
@@ -85,7 +141,6 @@ SCENE1:
     sw t1, 0(t0) 
     la t0, BACKGROUND_SOUND
     sw zero, 0(t0) 
-
 
     PRINT_BACKGROUND
     la a0, felixidle
@@ -211,12 +266,12 @@ SCENE2:
 SCENE3:
     la t0, PHASE_BACKGROUND_TRANSITION
     lh t1, 0(t0)
-    addi t1, t1, 2
+    addi t1, t1, 3
     sh t1, 0(t0)
     mv a6, t1
 
     lh t1, 2(t0)
-    addi t1, t1, 2
+    addi t1, t1, 3
     sh t1, 2(t0)
     mv a5, t1
     PRINT_TWO_BACKGROUND
@@ -226,7 +281,7 @@ SCENE3:
 
     la t0, ralph_data
     lh t1, 2(t0)
-    addi t1, t1, 2
+    addi t1, t1, 3
     sh t1, 2(t0)
 
     la a0, RalphIdle
@@ -248,7 +303,7 @@ SCENE3:
         j GAME_LOOP
 
 SCENE4:
-    PRINT_BACKGROUND_PHASE_2
+    PRINT_BACKGROUND_PHASE_2_QUEBRADO
     la a0, RalphIdle
     PRINT_RALPH
 
@@ -336,3 +391,178 @@ SCENE5:
     sw t1,0(t0)
     j GAME_LOOP
 
+SCENE6:
+    la t0, WIN_SOUND
+    li t1, 1
+    sw t1, 0(t0) 
+    la t0, BACKGROUND_SOUND
+    sw zero, 0(t0)
+    la t0, BACKGROUND_INVENCIVEL
+    sw zero, 0(t0)
+
+    PRINT_BACKGROUND_PHASE_2
+    la a0, felixidle
+    PRINT_FELIX
+
+    la t0, CUTSCENE_DATA
+    lh t1, 4(t0) # Frame counter
+    addi t1, t1, 1
+    sh t1, 4(t0)
+
+    li t2, 7
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 14
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 21
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 28
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 35
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 42
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 49
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 56
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 63
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 70
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 77
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 84
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    li t2, 91
+    blt t1, t2, LOAD_RALPH_SCREAM_1
+    li t2, 98
+    blt t1, t2, LOAD_RALPH_SCREAM_2
+    la a0, RalphScream2
+
+    la t0, CUTSCENE_DATA
+    lh t2, 2(t0)
+    addi t2, t2, 1
+    sh t2, 2(t0)
+    sh zero, 4(t0)
+
+    j POS_LOAD_RALPH
+    LOAD_RALPH_SCREAM_1:
+        la a0, RalphScream1
+        j POS_LOAD_RALPH    
+    LOAD_RALPH_SCREAM_2:
+        la a0, RalphScream2
+        j POS_LOAD_RALPH
+
+    POS_LOAD_RALPH:
+    li a4, 0
+    PRINT_RALPH
+
+    j GAME_LOOP
+
+SCENE7:
+    PRINT_BACKGROUND_PHASE_2
+
+    la t0, CUTSCENE_DATA
+    lh t1, 4(t0) # Frame counter
+    addi t1, t1, 1
+    sh t1, 4(t0)
+
+    li t2, 5
+    blt t1, t2, INVERT_RALPH_CLIMB
+    li t2, 10
+    blt t1, t2, DONT_INVERT_RALPH_CLIMB
+    li t2, 15
+    blt t1, t2, INVERT_RALPH_CLIMB
+    li t2, 20
+    blt t1, t2, DONT_INVERT_RALPH_CLIMB
+    li t2, 25
+    blt t1, t2, INVERT_RALPH_CLIMB
+    li t2, 30
+    blt t1, t2, DONT_INVERT_RALPH_CLIMB
+    li t2, 35
+    blt t1, t2, INVERT_RALPH_CLIMB
+    li t2, 40
+    blt t1, t2, DONT_INVERT_RALPH_CLIMB
+
+    la t0, CUTSCENE_DATA
+    lh t2, 2(t0)
+    addi t2, t2, 1
+    sh t2, 2(t0)
+    sh zero, 4(t0)
+
+    la t0, ralph_data
+    li t1, -239
+    sh t1, 2(t0)
+    li t1, 155
+    sh t1, 0(t0)
+
+    j GAME_LOOP
+
+    INVERT_RALPH_CLIMB:
+        li a4, 1
+        j POS_INVERT_RALPH_CLIMB
+    DONT_INVERT_RALPH_CLIMB:
+        li a4, 0
+        j POS_INVERT_RALPH_CLIMB
+    POS_INVERT_RALPH_CLIMB:
+
+    la t2, ralph_data
+    lh a2, 2(t2)          # y do ralph
+    addi a2, a2, -3
+    sh a2, 2(t2)
+
+    la a0, RalphClimb
+    PRINT_RALPH
+    la a0, felixidle
+    PRINT_FELIX
+    j GAME_LOOP
+
+SCENE8:
+    PRINT_BACKGROUND_PHASE_2
+    la t0, char_data
+    lh t1, 2(t0)
+    addi t1, t1, -6
+    sh t1, 2(t0)
+    la a0, felixjumple
+    bltz t1, END_SCENE8
+    PRINT_FELIX
+    j GAME_LOOP
+
+    END_SCENE8:
+        la t0, PHASE_BACKGROUND_TRANSITION
+        sh zero, 0(t0)
+        li t1, -240
+        sh t1, 2(t0)
+        la t0, CUTSCENE_DATA
+        lh t1, 2(t0)
+        addi t1, t1, 1
+        sh t1, 2(t0)
+        j GAME_LOOP
+
+SCENE9:
+    la t0, PHASE_BACKGROUND_TRANSITION
+    lh t1, 0(t0)
+    addi t1, t1, 3
+    sh t1, 0(t0)
+    mv a6, t1
+
+    lh t1, 2(t0)
+    addi t1, t1, 3
+    sh t1, 2(t0)
+    mv a5, t1
+    PRINT_TWO_BACKGROUND_PHASE_3
+
+    beqz a5, END_SCENE9
+    j GAME_LOOP
+
+    END_SCENE9:
+        la t0, CUTSCENE_DATA
+        lh t2, 2(t0)
+        addi t2, t2, 1
+        sh t2, 2(t0)
+        sh zero, 4(t0)
+        j GAME_LOOP 
+SCENE10:
+    PRINT_BACKGROUND_PHASE_3
+    la a0, RalphIdle
+    j GAME_LOOP

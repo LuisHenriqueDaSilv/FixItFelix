@@ -1,7 +1,7 @@
 ###########################################################
 .macro MACRO_PRINT_LEVEL 
 	li a1, 304
-	li a2, 1
+	li a2, 3
 	mv a3, s0          # a3 = frame atual (0 ou 1)
     li a4,0
 	call PRINT
@@ -18,7 +18,7 @@
 ###########################################################
 .macro MACRO_PRINT_LIFES 
     li a1, 1
-	li a2, 26
+	li a2, 35
 	mv a3, s0          # a3 = frame atual (0 ou 1)
     li a4,0
 	call PRINT
