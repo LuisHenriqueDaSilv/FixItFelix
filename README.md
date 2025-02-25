@@ -1,5 +1,6 @@
 
 <div align="center">
+    <img height="120" src="https://github.com/LuisHenriqueDaSilv/FixItFelix/blob/main/github/felix.png?raw=true">
     <h1>Fix it Felix</h1>
     <p>Trabalho final da disciplina <strong>Introdução aos Sistemas Computacionais (ISC)</strong>, ofertada pelo Prof°. Dr°. Marcus Vinicius Lamar na Universidade de Brasília (UnB),</br> <strong>utilizando Assembly RiscV 32bits</strong></p>
 </div>
@@ -39,9 +40,14 @@ git clone https://github.com/LuisHenriqueDaSilv/FixItFelix
 ```
 <p>Lembre-se de trocar o NOME_FPGRARS pelo nome do arquivo baixado na ultima etapa e de estar dentro do diretório FitItFelix (Este repositório).</p>
 
+
 ## Participantes
 <strong>
 <a href="https://github.com/LuisHenriqueDaSilv">Luis Henrique Da Silva</a></br>
 <a href="https://github.com/Anararara">Ana Sarah Nagata</a></br>
 <a href="https://github.com/KamilySAC">Kamily Silva Crispim</a></br>
 </strong>
+
+<div align="center">
+    <img  width="100%" src="https://github.com/LuisHenriqueDaSilv/FixItFelix/blob/main/github/vitoria.png?raw=true">
+</div>
