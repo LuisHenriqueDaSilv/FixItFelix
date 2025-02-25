@@ -47,7 +47,8 @@ git clone https://github.com/LuisHenriqueDaSilv/FixItFelix
 <a href="https://github.com/Anararara">Ana Sarah Nagata</a></br>
 <a href="https://github.com/KamilySAC">Kamily Silva Crispim</a></br>
 </strong>
-
+</br>
+</br>
 <div align="center">
     <img  width="100%" src="https://github.com/LuisHenriqueDaSilv/FixItFelix/blob/main/github/vitoria.png?raw=true">
 </div>
